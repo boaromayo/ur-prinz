@@ -55,8 +55,9 @@ class Window_BestiaryStat < Window_Help
   #------------------------------------------------------------------------
   def draw_progress
     comp_i = $game_system.enemy_slain
-    max_i = (comp_i / $data_enemies.size) * 100
-    prog_text = "Progress: " + max_i.to_s + "%"
+    max_i = $data_enemies.size 
+	pct = (comp_i / max_i) * 100
+    prog_text = "Progress: " + comp_i.to_s + "/" + max_i.to_s
     set_text(prog_text)
   end
 end
@@ -192,7 +193,7 @@ class Window_BestiaryRight < Window_Selectable
   # * Draw Other Stats
   #--------------------------------------------------------------------------
   def draw_other_stats(enemy, x, y)
-    param_count.times {|i| draw_enemy_param(enemy, x, y + line_height * i, i+2) }
+    param_count.each { |i| draw_enemy_param(enemy, x, y + line_height * i, i+2) }
   end
   #--------------------------------------------------------------------------
   # * Draw Element Stats
@@ -200,8 +201,8 @@ class Window_BestiaryRight < Window_Selectable
   def draw_elem_stats(enemy)
     # Add the defense ratings starting from weakest => absorbing
     add_ratings
-	elem_count.times { |i| draw_icon() }
-    elem_count.times { |elem| draw_enemy_element(enemy, window_width + 10, line_height * (2 + elem), enemy.param(elem)) }
+	#elem_count.each { |elem| process_draw_icon(elem.index, elem) }
+    elem_count.each { |elem| draw_enemy_element(enemy, window_width + 10, line_height * (2 + elem), enemy.param(elem)) }
   end
   #--------------------------------------------------------------------------
   # * Enemy Parameter Count
@@ -255,6 +256,12 @@ class Window_BestiaryRight < Window_Selectable
   #--------------------------------------------------------------------------
   def element_rating(index)
     @rate_list[index][:name]
+  end
+  #--------------------------------------------------------------------------
+  # * Get Enemy State Rating Name
+  #--------------------------------------------------------------------------
+  def state_rating(index)
+	@rate_list[index][:name]
   end
   #--------------------------------------------------------------------------
   # * Add Enemy Rating Names
@@ -319,7 +326,7 @@ class Window_BestiaryRight < Window_Selectable
     draw_text(x, y, width, line_height, "Drops")
     change_color(normal_color)
     enemy.items.each do |item|
-		
+	  #item.
     end
   end
 end
