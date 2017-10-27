@@ -161,6 +161,7 @@ class Window_BestiaryList < Window_Selectable
     change_color(normal_color, recorded?(id))
 	recorded?(id) ? draw_text(item_rect_for_text(id), enemy(id).name, 0) : 
 		draw_text(item_rect_for_text(id), unknown, 0)
+	recorded?(id) ? draw_text(item_rect_for_text(id), enemy(id).slain, 1) : 0
   end
 end
 
