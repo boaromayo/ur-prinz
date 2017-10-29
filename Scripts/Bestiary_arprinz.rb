@@ -7,15 +7,19 @@
 #
 # * Version: 1.0.1
 #
-# * Updated: 2017-10-25
+# * Updated: 2017-10-29
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
 # Optional prerequisites:
 #  * Expanded iconset for elements
+#
+# NOTE: If you are using this plugin for your projects (commercial or non-commercial), 
+# be sure to leave this comment visible or credit me (boaromayo or Quesada's Swan) 
+# in your projects.
 #==========================================================================
 #==========================================================================
-# * RPG::Enemy Modifications
+# ** RPG::Enemy Modifications
 #==========================================================================
 class RPG::Enemy < RPG::BaseItem
   attr_accessor	:slain						# Number of certain enemy defeated
