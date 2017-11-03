@@ -607,7 +607,7 @@ class Scene_Bestiary < Scene_Base
 	# Place list into data based on the number of enemies slain
 	if enemies_slain > 0
 	  enemies_encounter.each do |enemy|
-		@list_window.add_enemy(enemy.id, enemy) if enemies_encounter[enemy] == true
+		@list_window.add_enemy(enemy.id, enemy) if enemies_encounter[enemy]
 	  end
 	end
   end
