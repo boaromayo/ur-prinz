@@ -16,7 +16,7 @@
 #
 # NOTE: If you are using this plugin for your projects (commercial or non-commercial), 
 # be sure to leave this comment visible or credit me (boaromayo or Quesada's Swan) 
-# in your projects.
+# somewhere in your projects.
 #==========================================================================
 #==========================================================================
 # ** RPG::Enemy Modifications
@@ -65,7 +65,24 @@ end
 # battle events. The instance of this class is referenced by $game_troop.
 #==========================================================================
 class Game_Troop < Game_Unit
-
+  #------------------------------------------------------------------------
+  # * override method: 
+  #------------------------------------------------------------------------
+  alias 
+  def
+    
+  end
+  #------------------------------------------------------------------------
+  # * new method: Include Dead Enemies
+  #------------------------------------------------------------------------
+  def check_enemies
+    enemies.each do |enemy|
+	  unless enemy.slain > 0
+	    $game_system.enemy_slain? += 1
+		$game_system.enemy_encounter[enemy.id] = true
+	  end
+	end
+  end
 end
 
 #==========================================================================
@@ -113,12 +130,6 @@ class Window_BestiaryList < Window_Selectable
     return 2
   end
   #------------------------------------------------------------------------
-  # * Get Unknown Text
-  #------------------------------------------------------------------------
-  def unknown
-	"????????"
-  end
-  #------------------------------------------------------------------------
   # * Get Number of Enemies Slain
   #------------------------------------------------------------------------
   def enemy_now
@@ -164,7 +175,7 @@ class Window_BestiaryList < Window_Selectable
   def draw_item(id)
     change_color(normal_color, recorded?(id))
 	recorded?(id) ? draw_text(item_rect_for_text(id), enemy(id).name, 0) : 
-		draw_text(item_rect_for_text(id), unknown, 0)
+		draw_text(item_rect_for_text(id), "????????")
 	recorded?(id) ? draw_text(item_rect_for_text(id), enemy(id).slain, 1) : 0
   end
 end
@@ -307,6 +318,12 @@ class Window_BestiaryRight < Window_Selectable
   #--------------------------------------------------------------------------
   def param_count
     2..7 # 2 => ATK, 7 => LCK
+  end
+  #--------------------------------------------------------------------------
+  # * Enemy S-Parameter Count
+  #--------------------------------------------------------------------------
+  def sparam_count
+    1..5 # 1 => , 5 =>
   end
   #--------------------------------------------------------------------------
   # * Enemy Element Rate Count
@@ -607,7 +624,7 @@ class Scene_Bestiary < Scene_Base
 	# Place list into data based on the number of enemies slain
 	if enemies_slain > 0
 	  enemies_encounter.each do |enemy|
-		@list_window.add_enemy(enemy.id, enemy) if enemies_encounter[enemy]
+		@list_window.add_enemy(enemy.id, enemy) if enemies_encounter[enemy] == true
 	  end
 	end
   end
