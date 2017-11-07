@@ -7,7 +7,11 @@
 #
 # * Version: 1.0.1
 #
-# * Updated: 2017-10-29
+# * Initial release: 2016-04-25
+#
+# * Initial commit: 2017-10-16
+#
+# * Updated: 2017-11-06
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -17,7 +21,23 @@
 # NOTE: If you are using this plugin for your projects (commercial or non-commercial), 
 # be sure to leave this comment visible or credit me (boaromayo or Quesada's Swan) 
 # somewhere in your projects.
+#
+# * Changelog:
+#    -- Added $imported global variable - 2017-11-06
+#    -- Unknown text method re-added - 2017-11-06
+#    -- Unknown text method removed - 2017-11-05
+#    -- Edited draw_item method - 2017-11-04
+#    -- Added sparam_count method - 2017-11-04
+#    -- Removed explicit condition in loading data - 2017-11-02
+#    -- Displayed enemy slain in list window - 2017-10-26
+#    -- Added more features and fixed bugs - 2017-10-25
+#    -- Added more features - 2017-10-18
+#    -- Initial commit - 2017-10-16
 #==========================================================================
+
+$imported ||= {}
+$imported["Bestiary_arprinz"] = true
+
 #==========================================================================
 # ** RPG::Enemy Modifications
 #==========================================================================
@@ -122,6 +142,7 @@ class Window_BestiaryList < Window_Selectable
   def initialize
     super(0, 0, Graphics.width, Graphics.height - fitting_height(2))
     @data = []
+	@unknown = "????????"
   end
   #------------------------------------------------------------------------
   # * Get Column Count
@@ -155,6 +176,12 @@ class Window_BestiaryList < Window_Selectable
     enemy(id) != nil
   end
   #------------------------------------------------------------------------
+  # * override method: Get Unknown Text
+  #------------------------------------------------------------------------
+  def unknown
+    @unknown
+  end
+  #------------------------------------------------------------------------
   # * Get Enemies Data
   #------------------------------------------------------------------------
   #def enemies
@@ -175,7 +202,7 @@ class Window_BestiaryList < Window_Selectable
   def draw_item(id)
     change_color(normal_color, recorded?(id))
 	recorded?(id) ? draw_text(item_rect_for_text(id), enemy(id).name, 0) : 
-		draw_text(item_rect_for_text(id), "????????")
+		draw_text(item_rect_for_text(id), unknown)
 	recorded?(id) ? draw_text(item_rect_for_text(id), enemy(id).slain, 1) : 0
   end
 end
