@@ -11,7 +11,7 @@
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2017-11-06
+# * Updated: 2017-11-14
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -23,6 +23,8 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Added Scene_Menu override methods - 2017-11-14
+#    -- Added Game_Enemy new and override methods - 2017-11-14
 #    -- Added $imported global variable - 2017-11-06
 #    -- Unknown text method re-added - 2017-11-06
 #    -- Unknown text method removed - 2017-11-05
@@ -42,16 +44,17 @@ $imported["Bestiary_arprinz"] = true
 # ** RPG::Enemy Modifications
 #==========================================================================
 class RPG::Enemy < RPG::BaseItem
-  attr_accessor	:slain						# Number of certain enemy defeated
+  attr_accessor	:number_slain					# Number of certain enemy defeated
   #------------------------------------------------------------------------
   # * alias method: Object Initialization
   #------------------------------------------------------------------------
   alias enemy_initialize initialize
   def initialize
 	enemy_initialize
-	@slain = 0
+	@number_slain = 0
   end
 end
+
 #==========================================================================
 # ** Game_System
 #--------------------------------------------------------------------------
@@ -79,29 +82,26 @@ class Game_System
 end
 
 #==========================================================================
-# ** Game_Troop
+# ** Game_Enemy
 #--------------------------------------------------------------------------
-#  This class handles enemy groups and battle-related data. Also performs
-# battle events. The instance of this class is referenced by $game_troop.
+#  This class handles enemies. It used within the Game_Troop class 
+# ($game_troop).
 #==========================================================================
-class Game_Troop < Game_Unit
+class Game_Enemy < Game_Battler
   #------------------------------------------------------------------------
-  # * override method: 
+  # * new method: Check Enemies Encountered
   #------------------------------------------------------------------------
-  alias 
-  def
-    
+  def add_encountered_enemy
+    $game_system.enemy_encounter[@enemy_id] = true unless $game_system.enemy_encounter.include?(@enemy_id)
   end
   #------------------------------------------------------------------------
-  # * new method: Include Dead Enemies
+  # * override method: Die
   #------------------------------------------------------------------------
-  def check_enemies
-    enemies.each do |enemy|
-	  unless enemy.slain > 0
-	    $game_system.enemy_slain? += 1
-		$game_system.enemy_encounter[enemy.id] = true
-	  end
-	end
+  alias bestiary_add_enemy_die die
+  def die
+	bestiary_add_enemy_die
+	enemy.number_slain += 1
+    $game_system.enemy_slain? += 1
   end
 end
 
@@ -577,11 +577,39 @@ class Window_BestiaryRight < Window_Selectable
 end
 
 #==========================================================================
+# ** Scene_Menu
+#--------------------------------------------------------------------------
+#  This class performs the menu scene processing.
+#==========================================================================
+class Scene_Menu < Scene_MenuBase
+  #--------------------------------------------------------------------------
+  # * override method: Create Command Window
+  #--------------------------------------------------------------------------
+  def create_command_window
+    @command_window = Window_MenuCommand.new
+    @command_window.set_handler(:item,      method(:command_item))
+    @command_window.set_handler(:skill,     method(:command_personal))
+    @command_window.set_handler(:equip,     method(:command_personal))
+    @command_window.set_handler(:status,    method(:command_personal))
+    @command_window.set_handler(:formation, method(:command_formation))
+	@command_window.set_handler(:bestiary,	method(:command_bestiary))
+    @command_window.set_handler(:save,      method(:command_save))
+    @command_window.set_handler(:game_end,  method(:command_game_end))
+    @command_window.set_handler(:cancel,    method(:return_scene))
+  end
+  #--------------------------------------------------------------------------
+  # * new method: [Bestiary] Window
+  #--------------------------------------------------------------------------
+  def command_bestiary
+    SceneManager.call(Scene_Bestiary)
+  end
+end
+
+#==========================================================================
 # ** Scene_Bestiary
 #--------------------------------------------------------------------------
 #  This class performs the bestiary scene processing.
 #==========================================================================
-
 class Scene_Bestiary < Scene_Base
   #------------------------------------------------------------------------
   # * Start Processing
