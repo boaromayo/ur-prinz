@@ -23,6 +23,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Modified Game_System alias initialize - 2017-11-14
 #    -- Added Scene_Menu override methods - 2017-11-14
 #    -- Added Game_Enemy new and override methods - 2017-11-14
 #    -- Added $imported global variable - 2017-11-06
@@ -44,6 +45,9 @@ $imported["Bestiary_arprinz"] = true
 # ** RPG::Enemy Modifications
 #==========================================================================
 class RPG::Enemy < RPG::BaseItem
+  #------------------------------------------------------------------------
+  # * Public Instance Variables
+  #------------------------------------------------------------------------
   attr_accessor	:number_slain					# Number of certain enemy defeated
   #------------------------------------------------------------------------
   # * alias method: Object Initialization
@@ -66,16 +70,16 @@ class Game_System
   # * Add new public instance variables
   #------------------------------------------------------------------------
   attr_accessor :enemy_encounter			# Checks if enemy encountered?
-  attr_accessor :enemy_slain?				# Number of enemies slain
+  attr_accessor :enemy_slain				# Number of enemies slain
   #------------------------------------------------------------------------
-  # * Add initialize method
+  # * alias method: Add initialize method
   #------------------------------------------------------------------------
   alias bestiary_initialize initialize
   def initialize
 	bestiary_initialize
 	@enemy_encounter = []
-	@enemy_slain? = 0
-	$data_enemies.size.each do |enemy|
+	@enemy_slain = 0
+	$data_enemies.each_index do |enemy|
 	  @enemy_encounter[enemy] = false
 	end
   end
@@ -101,7 +105,7 @@ class Game_Enemy < Game_Battler
   def die
 	bestiary_add_enemy_die
 	enemy.number_slain += 1
-    $game_system.enemy_slain? += 1
+    $game_system.enemy_slain += 1
   end
 end
 
@@ -122,7 +126,7 @@ class Window_BestiaryStatus < Window_Help
   # * Draw Progress
   #------------------------------------------------------------------------
   def draw_progress
-    completed = $game_system.enemy_slain?
+    completed = $game_system.enemy_slain
     max_enemies = $data_enemies.size
 	#complete_pct = (completed / max_i) * 100
     prog_text = "Progress: " + completed.to_s + "/" + max_enemies.to_s
@@ -154,7 +158,7 @@ class Window_BestiaryList < Window_Selectable
   # * Get Number of Enemies Slain
   #------------------------------------------------------------------------
   def enemy_now
-	$game_system.enemy_slain?
+	$game_system.enemy_slain
   end
   #------------------------------------------------------------------------
   # * Get Maximum Number of Enemies In Bestiary
@@ -344,27 +348,27 @@ class Window_BestiaryRight < Window_Selectable
   # * Enemy Parameter Count
   #--------------------------------------------------------------------------
   def param_count
-    2..7 # 2 => ATK, 7 => LCK
+    [2..7] # 2 => ATK, 7 => LCK
   end
   #--------------------------------------------------------------------------
   # * Enemy S-Parameter Count
   #--------------------------------------------------------------------------
   def sparam_count
-    1..5 # 1 => , 5 =>
+    [1..5] # 1 => , 5 =>
   end
   #--------------------------------------------------------------------------
   # * Enemy Element Rate Count
   #	    NOTE: Adjust number of elements counted based on elements used.
   #--------------------------------------------------------------------------
   def elements_count
-    3..14 # 3 => Fire, 14 => Void/Null
+    [3..14] # 3 => Fire, 14 => Void/Null
   end
   #--------------------------------------------------------------------------
   # * Enemy States Rate Count
   #		NOTE: Adjust number of states counted based on states used.
   #--------------------------------------------------------------------------
   def states_count
-    1..10 # 1 => Death, 10 => Burn?
+    [1..10] # 1 => Death, 10 => Burn?
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy HP
@@ -674,7 +678,7 @@ class Scene_Bestiary < Scene_Base
   #------------------------------------------------------------------------
   def load_bestiary_data
 	enemies_encounter = $game_system.enemy_encounter
-	enemies_slain	  = $game_system.enemy_slain?
+	enemies_slain	  = $game_system.enemy_slain
 	enemies_slain_no  = $data_enemies.slain
 	# Place list into data based on the number of enemies slain
 	if enemies_slain > 0
