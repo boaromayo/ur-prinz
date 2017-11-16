@@ -11,7 +11,7 @@
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2017-11-14
+# * Updated: 2017-11-16
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -23,7 +23,10 @@
 # somewhere in your projects.
 #
 # * Changelog:
-#    -- Modified Game_System alias initialize - 2017-11-14
+#    -- Fixed additional crashing bugs - 2017-11-16
+#    -- Modified game objects and fixed bugs - 2017-11-15
+#    -- Fixed additional bugs - 2017-11-14
+#    -- Fixed error bug in Game_System - 2017-11-14
 #    -- Added Scene_Menu override methods - 2017-11-14
 #    -- Added Game_Enemy new and override methods - 2017-11-14
 #    -- Added $imported global variable - 2017-11-06
@@ -42,46 +45,58 @@ $imported ||= {}
 $imported["Bestiary_arprinz"] = true
 
 #==========================================================================
-# ** RPG::Enemy Modifications
-#==========================================================================
-class RPG::Enemy < RPG::BaseItem
-  #------------------------------------------------------------------------
-  # * Public Instance Variables
-  #------------------------------------------------------------------------
-  attr_accessor	:number_slain					# Number of certain enemy defeated
-  #------------------------------------------------------------------------
-  # * alias method: Object Initialization
-  #------------------------------------------------------------------------
-  alias enemy_initialize initialize
-  def initialize
-	enemy_initialize
-	@number_slain = 0
-  end
-end
-
-#==========================================================================
 # ** Game_System
 #--------------------------------------------------------------------------
 #  This class handles system data. It saves the disable state of saving and 
 # menus. Instances of this class are referenced by $game_system.
 #==========================================================================
+
 class Game_System
   #------------------------------------------------------------------------
   # * Add new public instance variables
   #------------------------------------------------------------------------
   attr_accessor :enemy_encounter			# Checks if enemy encountered?
-  attr_accessor :enemy_slain				# Number of enemies slain
+  attr_accessor :enemy_slain			    # Quantity of enemy types slain
+  attr_accessor :enemy_list           # List of enemies slain
+  attr_accessor :total_enemy_slain		# Number of enemies slain
   #------------------------------------------------------------------------
-  # * alias method: Add initialize method
+  # * alias method: Object Initialization
   #------------------------------------------------------------------------
   alias bestiary_initialize initialize
   def initialize
-	bestiary_initialize
-	@enemy_encounter = []
-	@enemy_slain = 0
-	$data_enemies.each_index do |enemy|
-	  @enemy_encounter[enemy] = false
-	end
+    bestiary_initialize
+    @enemy_encounter = []
+    @enemy_slain = []
+    @enemy_list = []
+	  @total_enemy_slain = 0
+    $data_enemies.each_index do |enemy|
+      @enemy_encounter[enemy] = false
+	    @enemy_slain[enemy] = 0
+      @enemy_list[enemy] = nil
+    end
+  end
+  #------------------------------------------------------------------------
+  # * new method: Get Total Enemies Slain
+  #------------------------------------------------------------------------
+  def total_enemy_slain
+    @total_enemy_slain.to_i
+  end
+  #------------------------------------------------------------------------
+  # * new method: Get Quantity of Certain Enemy Slain
+  #------------------------------------------------------------------------
+  def enemies_slain(enemy_id)
+    @enemy_slain[enemy_id].to_i
+  end
+  
+  #------------------------------------------------------------------------
+  # * new method: Add Enemies Slain
+  #------------------------------------------------------------------------
+  def add_enemies_slain(enemy)
+    unless @enemy_slain[enemy.id] > 0
+      @total_enemy_slain = @total_enemy_slain + 1
+      @enemy_list[enemy.id] = enemy
+    end
+    @enemy_slain[enemy.id] = @enemy_slain[enemy.id] + 1
   end
 end
 
@@ -95,17 +110,39 @@ class Game_Enemy < Game_Battler
   #------------------------------------------------------------------------
   # * new method: Check Enemies Encountered
   #------------------------------------------------------------------------
-  def add_encountered_enemy
+  def add_encountered_enemy(enemy_id)
+    @enemy_id = enemy_id
     $game_system.enemy_encounter[@enemy_id] = true unless $game_system.enemy_encounter.include?(@enemy_id)
   end
   #------------------------------------------------------------------------
   # * override method: Die
   #------------------------------------------------------------------------
-  alias bestiary_add_enemy_die die
+  alias bestiary_enemy_die die
   def die
-	bestiary_add_enemy_die
-	enemy.number_slain += 1
-    $game_system.enemy_slain += 1
+	  bestiary_enemy_die
+    $game_system.add_enemies_slain(enemy) unless $game_system.enemy_slain.include?(enemy)
+  end
+end
+
+#==============================================================================
+# ** Game_Troop
+#------------------------------------------------------------------------------
+#  This class handles enemy groups and battle-related data. Also performs
+# battle events. The instance of this class is referenced by $game_troop.
+#==============================================================================
+class Game_Troop < Game_Unit
+  #--------------------------------------------------------------------------
+  # * alias method: Setup
+  #  troop_id : troop_id
+  #--------------------------------------------------------------------------
+  alias bestiary_setup setup
+  def setup(troop_id)
+    bestiary_setup(troop_id)
+    troop.members.each do |member|
+      next unless $data_enemies[member.enemy_id]
+      enemy = Game_Enemy.new(@enemies.size, member.enemy_id)
+	  enemy.add_encountered_enemy(member.enemy_id)
+    end
   end
 end
 
@@ -126,9 +163,8 @@ class Window_BestiaryStatus < Window_Help
   # * Draw Progress
   #------------------------------------------------------------------------
   def draw_progress
-    completed = $game_system.enemy_slain
+    completed = $game_system.total_enemy_slain
     max_enemies = $data_enemies.size
-	#complete_pct = (completed / max_i) * 100
     prog_text = "Progress: " + completed.to_s + "/" + max_enemies.to_s
     set_text(prog_text)
   end
@@ -144,9 +180,9 @@ class Window_BestiaryList < Window_Selectable
   # * Object Initialization
   #------------------------------------------------------------------------
   def initialize
-    super(0, 0, Graphics.width, Graphics.height - fitting_height(2))
+    super(0, fitting_height(2), Graphics.width, Graphics.height - fitting_height(2))
     @data = []
-	@unknown = "????????"
+	  @unknown = "????????"
   end
   #------------------------------------------------------------------------
   # * Get Column Count
@@ -158,7 +194,7 @@ class Window_BestiaryList < Window_Selectable
   # * Get Number of Enemies Slain
   #------------------------------------------------------------------------
   def enemy_now
-	$game_system.enemy_slain
+	  $game_system.total_enemy_slain
   end
   #------------------------------------------------------------------------
   # * Get Maximum Number of Enemies In Bestiary
@@ -200,14 +236,16 @@ class Window_BestiaryList < Window_Selectable
     @data[id] = enemy
   end
   #------------------------------------------------------------------------
-  # * Draw Item - Enemy Data
+  # * Draw Enemy Data
   #		id  : Enemy ID
   #------------------------------------------------------------------------
   def draw_item(id)
+    name = enemy(id).name
+	  slain = $game_system.enemies_slain(id)
     change_color(normal_color, recorded?(id))
-	recorded?(id) ? draw_text(item_rect_for_text(id), enemy(id).name, 0) : 
-		draw_text(item_rect_for_text(id), unknown)
-	recorded?(id) ? draw_text(item_rect_for_text(id), enemy(id).slain, 1) : 0
+	  recorded?(id) ? draw_text(item_rect_for_text(id), name, 0) : 
+		  draw_text(item_rect_for_text(id), unknown)
+	  recorded?(id) ? draw_text(item_rect_for_text(id), slain, 1) : 0
   end
 end
 
@@ -216,7 +254,7 @@ end
 #--------------------------------------------------------------------------
 #  This window (the left window) displays the enemy's sprite & background.
 #==========================================================================
-class Window_BestiaryLeft < Window_Selectable
+class Window_BestiaryLeft < Window_Base
   #------------------------------------------------------------------------
   # * Object Initialization
   #------------------------------------------------------------------------
@@ -271,9 +309,8 @@ class Window_BestiaryRight < Window_Selectable
   #------------------------------------------------------------------------
   def initialize(enemy)
     super(window_width, 0, window_width, Graphics.height)
-    @enemy = enemy
-	create_ratings
-    refresh
+	  create_ratings
+    refresh(enemy)
   end
   #--------------------------------------------------------------------------
   # * Get Window Width
@@ -285,7 +322,7 @@ class Window_BestiaryRight < Window_Selectable
   # * Draw Enemy Name
   #--------------------------------------------------------------------------
   def draw_enemy_name(enemy, x, y, width = 144)
-    name = enemy.battler_name
+    name = enemy.name
     draw_text(x, y, width, line_height, name)
   end
   #--------------------------------------------------------------------------
@@ -306,18 +343,18 @@ class Window_BestiaryRight < Window_Selectable
   #--------------------------------------------------------------------------
   # * Refresh
   #--------------------------------------------------------------------------
-  def refresh(mode = 0)
+  def refresh(enemy, mode = 0)
     contents.clear
-    draw_enemy_name(@enemy, window_width - 10, 0)
+    draw_enemy_name(enemy, window_width - 10, 0)
     draw_horz_line(line_height + line_height / 4 + 3)
     if mode == 0
-      draw_basic_stats(@enemy, 10, 0)
-      draw_other_stats(@enemy, 10, line_height * 3)
+      draw_basic_stats(enemy, 10, 0)
+      draw_other_stats(enemy, 10, line_height * 3)
     elsif mode == 1
-      draw_elem_stats(@enemy)
+      draw_elem_stats(enemy)
     elsif mode == 2
-	  draw_enemy_items(@enemy, 10, 0)
-	end
+	    draw_enemy_items(enemy, 10, 0)
+	  end
   end
   #--------------------------------------------------------------------------
   # * Draw Basic Stats
@@ -536,10 +573,10 @@ class Window_BestiaryRight < Window_Selectable
     items = enemy.drop_items
     change_color(system_color)
     draw_text(x, y, width, line_height, "Drops")
-	draw_horz_line(y + line_height)
+	  draw_horz_line(y + line_height)
     change_color(normal_color)
     items.each do |item|
-	  draw_item_name(item, x, y + line_height * 2)
+	    draw_item_name(item, x, y + line_height * 2)
     end
   end
   #------------------------------------------------------------------------
@@ -547,7 +584,8 @@ class Window_BestiaryRight < Window_Selectable
   # 	Note: These numbers are only applicable to the big iconset.
   #------------------------------------------------------------------------
   def element_icon(index)
-    # Set icon values based on icon index (adjust if icon index for each element is different)
+    # Set icon values based on icon index 
+    # (adjust if icon index for each element is different)
     elem_icon = 101
 	physical_icon = 2
 	wood_icon = 192
@@ -580,6 +618,35 @@ class Window_BestiaryRight < Window_Selectable
   #end
 end
 
+#==============================================================================
+# ** Window_MenuCommand
+#------------------------------------------------------------------------------
+#  This command window appears on the menu screen.
+#==============================================================================
+
+class Window_MenuCommand < Window_Command
+  #--------------------------------------------------------------------------
+  # * alias method: For Adding Original Commands
+  #--------------------------------------------------------------------------
+  alias bestiary_cmd add_original_commands
+  def add_original_commands
+    bestiary_cmd
+	add_bestiary_command
+  end
+  #--------------------------------------------------------------------------
+  # * new method: Add Bestiary to Command List
+  #--------------------------------------------------------------------------
+  def add_bestiary_command
+    add_command("Bestiary", :bestiary, bestiary_enabled)
+  end
+  #--------------------------------------------------------------------------
+  # * new method: Get Activation State of Bestiary
+  #--------------------------------------------------------------------------
+  def bestiary_enabled
+    $game_system.total_enemy_slain > 0
+  end
+end
+
 #==========================================================================
 # ** Scene_Menu
 #--------------------------------------------------------------------------
@@ -596,7 +663,7 @@ class Scene_Menu < Scene_MenuBase
     @command_window.set_handler(:equip,     method(:command_personal))
     @command_window.set_handler(:status,    method(:command_personal))
     @command_window.set_handler(:formation, method(:command_formation))
-	@command_window.set_handler(:bestiary,	method(:command_bestiary))
+	  @command_window.set_handler(:bestiary,	method(:command_bestiary))
     @command_window.set_handler(:save,      method(:command_save))
     @command_window.set_handler(:game_end,  method(:command_game_end))
     @command_window.set_handler(:cancel,    method(:return_scene))
@@ -620,10 +687,11 @@ class Scene_Bestiary < Scene_Base
   #------------------------------------------------------------------------
   def start
     super
-	@id = 0
-	load_bestiary_data
+    @index = -1
+    @enemy_list = $game_system.enemy_list
     create_bestiary_list_windows
-    create_bestiary_windows(enemy(@id))
+    load_bestiary_data
+    create_bestiary_windows(@enemy_list[@index])
   end
   #------------------------------------------------------------------------
   # * Create Bestiary List
@@ -644,8 +712,8 @@ class Scene_Bestiary < Scene_Base
   #------------------------------------------------------------------------
   def create_list_window
     @list_window = Window_BestiaryList.new
-	@list_window.activate
-	@list_window.show
+	  @list_window.activate
+	  @list_window.show
   end
   #------------------------------------------------------------------------
   # * Create Bestiary Windows
@@ -661,8 +729,8 @@ class Scene_Bestiary < Scene_Base
   #------------------------------------------------------------------------
   def create_left_window(enemy)
     @left_window = Window_BestiaryLeft.new(enemy)
-	@left_window.deactivate
-	@left_window.hide
+	  @left_window.deactivate
+	  @left_window.hide
   end
   #------------------------------------------------------------------------
   # * Create Right Window
@@ -677,15 +745,18 @@ class Scene_Bestiary < Scene_Base
   # * Load Bestiary Data
   #------------------------------------------------------------------------
   def load_bestiary_data
-	enemies_encounter = $game_system.enemy_encounter
-	enemies_slain	  = $game_system.enemy_slain
-	enemies_slain_no  = $data_enemies.slain
-	# Place list into data based on the number of enemies slain
-	if enemies_slain > 0
-	  enemies_encounter.each do |enemy|
-		@list_window.add_enemy(enemy.id, enemy) if enemies_encounter[enemy] == true
+	  enemies_encounter 		= $game_system.enemy_encounter
+	  enemies_slain	  		  = $game_system.enemy_slain
+	  enemies_slain_total  	= $game_system.total_enemy_slain
+	  # Place list into data based on the number of enemies slain
+	  if enemies_slain_total > 0
+	    $data_enemies.each_index do |id|
+        if @enemy_list.include?(id)
+		      @list_window.add_enemy(id,@enemy_list[id])
+          @index = id if @index < 0
+        end
+	    end
 	  end
-	end
   end
   #------------------------------------------------------------------------
   # * Frame Update
@@ -706,7 +777,7 @@ class Scene_Bestiary < Scene_Base
   #		id : Enemy ID Number
   #------------------------------------------------------------------------
   def enemy(id)
-	@list_window.enemy(id)
+	  @list_window.enemy(id)
   end
   #------------------------------------------------------------------------
   # * Switch to Next Enemy
