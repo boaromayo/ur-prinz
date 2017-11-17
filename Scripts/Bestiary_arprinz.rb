@@ -11,7 +11,7 @@
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2017-11-16
+# * Updated: 2017-11-17
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -23,6 +23,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Fixed bug that prevents leaving bestiary menu - 2017-11-17
 #    -- Fixed additional crashing bugs - 2017-11-16
 #    -- Modified game objects and fixed bugs - 2017-11-15
 #    -- Fixed additional bugs - 2017-11-14
@@ -149,24 +150,34 @@ end
 #==========================================================================
 # ** Window_BestiaryStatus
 #--------------------------------------------------------------------------
-#  This window displays the completeness of the bestiary.
+#  This window displays bestiary progress.
 #==========================================================================
 class Window_BestiaryStatus < Window_Help
   #------------------------------------------------------------------------
   # * Object Initialization
   #------------------------------------------------------------------------
   def initialize
-    super
+    super(1)
     draw_progress
   end
   #------------------------------------------------------------------------
   # * Draw Progress
   #------------------------------------------------------------------------
   def draw_progress
-    completed = $game_system.total_enemy_slain
-    max_enemies = $data_enemies.size
-    prog_text = "Progress: " + completed.to_s + "/" + max_enemies.to_s
+    prog_text = "Progress: " + enemy_now.to_s + "/" + enemy_max.to_s
     set_text(prog_text)
+  end
+  #------------------------------------------------------------------------
+  # * Get Number of Enemies Slain
+  #------------------------------------------------------------------------
+  def enemy_now
+    $game_system.total_enemy_slain
+  end
+  #------------------------------------------------------------------------
+  # * Get Maximum Number of Enemies In Bestiary
+  #------------------------------------------------------------------------
+  def enemy_max
+    $data_enemies.size
   end
 end
 
@@ -180,9 +191,11 @@ class Window_BestiaryList < Window_Selectable
   # * Object Initialization
   #------------------------------------------------------------------------
   def initialize
-    super(0, fitting_height(2), Graphics.width, Graphics.height - fitting_height(2))
+    super(0, fitting_height(1), Graphics.width, Graphics.height - fitting_height(1))
     @data = []
 	  @unknown = "????????"
+    refresh
+    activate
   end
   #------------------------------------------------------------------------
   # * Get Column Count
@@ -191,26 +204,21 @@ class Window_BestiaryList < Window_Selectable
     return 2
   end
   #------------------------------------------------------------------------
-  # * Get Number of Enemies Slain
+  # * Get Enemies Possible
   #------------------------------------------------------------------------
-  def enemy_now
-	  $game_system.total_enemy_slain
+  def item_max
+    @data ? @data.size : 1
   end
   #------------------------------------------------------------------------
-  # * Get Maximum Number of Enemies In Bestiary
-  #------------------------------------------------------------------------
-  def enemy_max
-    $data_enemies.size
-  end
-  #------------------------------------------------------------------------
-  # * Get Data of Selected Enemy
-  #		id : Enemy ID
+  # * Get Selected Enemy
+  #    id : Enemy ID
   #------------------------------------------------------------------------
   def enemy(id)
-    @data[id]
+    @data && @data[id] != nil ? @data[id] : nil
   end
   #------------------------------------------------------------------------
-  # * Determine Entry Recorded
+  # * Determine If Entry Recorded
+  #    id : Enemy ID
   #------------------------------------------------------------------------
   def recorded?(id)
     enemy(id) != nil
@@ -222,12 +230,6 @@ class Window_BestiaryList < Window_Selectable
     @unknown
   end
   #------------------------------------------------------------------------
-  # * Get Enemies Data
-  #------------------------------------------------------------------------
-  #def enemies
-	#@data
-  #end
-  #------------------------------------------------------------------------
   # * Add Enemy Data
   #		id 	   : Enemy ID
   #		enemy  : Enemy
@@ -237,15 +239,23 @@ class Window_BestiaryList < Window_Selectable
   end
   #------------------------------------------------------------------------
   # * Draw Enemy Data
-  #		id  : Enemy ID
+  #		index  : Enemy ID
   #------------------------------------------------------------------------
-  def draw_item(id)
-    name = enemy(id).name
-	  slain = $game_system.enemies_slain(id)
-    change_color(normal_color, recorded?(id))
-	  recorded?(id) ? draw_text(item_rect_for_text(id), name, 0) : 
+  def draw_item(index)
+    name = enemy(index).name
+	  slain = $game_system.enemies_slain(index)
+    change_color(normal_color, recorded?(index))
+	  recorded?(index) ? draw_text(item_rect_for_text(index), name, 0) : 
 		  draw_text(item_rect_for_text(id), unknown)
-	  recorded?(id) ? draw_text(item_rect_for_text(id), slain, 1) : 0
+	  recorded?(index) ? draw_text(item_rect_for_text(index), slain, 1) : 0
+    msgbox("Created " + name + " at index " + index)
+  end
+  #------------------------------------------------------------------------
+  # * Refresh
+  #------------------------------------------------------------------------
+  def refresh
+    create_contents
+    draw_all_items
   end
 end
 
@@ -377,9 +387,9 @@ class Window_BestiaryRight < Window_Selectable
     # Add the defense ratings starting from weakest => absorbing
     add_ratings
     elements_count.each do |elem|
-	  draw_enemy_element(enemy, 10, line_height * (elem + 2), elem)
-	end
-	change_color(normal_color)
+	    draw_enemy_element(enemy, 10, line_height * (elem + 2), elem)
+	  end
+	  change_color(normal_color)
   end
   #--------------------------------------------------------------------------
   # * Enemy Parameter Count
@@ -457,7 +467,7 @@ class Window_BestiaryRight < Window_Selectable
   # * Create Enemy Defense Ratings List
   #--------------------------------------------------------------------------
   def create_ratings
-	@rate_list = []
+	  @rate_list = []
   end
   #--------------------------------------------------------------------------
   # * Add Enemy Defense Rating
@@ -691,10 +701,10 @@ class Scene_Bestiary < Scene_Base
     @enemy_list = $game_system.enemy_list
     create_bestiary_list_windows
     load_bestiary_data
-    create_bestiary_windows(@enemy_list[@index])
+    #create_bestiary_windows(@enemy_list[@index])
   end
   #------------------------------------------------------------------------
-  # * Create Bestiary List
+  # * Create Bestiary List Windows
   #------------------------------------------------------------------------
   def create_bestiary_list_windows
     create_status_window
@@ -708,12 +718,13 @@ class Scene_Bestiary < Scene_Base
     @status_window.viewport = @viewport
   end
   #------------------------------------------------------------------------
-  # * Create Bestiary List Window
+  # * Create List Window
   #------------------------------------------------------------------------
   def create_list_window
     @list_window = Window_BestiaryList.new
-	  @list_window.activate
-	  @list_window.show
+    @list_window.viewport = @viewport
+    #@list_window.set_handler(:ok,     method(:on_enemy_ok))
+    @list_window.set_handler(:cancel, method(:return_scene))
   end
   #------------------------------------------------------------------------
   # * Create Bestiary Windows
@@ -729,7 +740,6 @@ class Scene_Bestiary < Scene_Base
   #------------------------------------------------------------------------
   def create_left_window(enemy)
     @left_window = Window_BestiaryLeft.new(enemy)
-	  @left_window.deactivate
 	  @left_window.hide
   end
   #------------------------------------------------------------------------
@@ -745,39 +755,16 @@ class Scene_Bestiary < Scene_Base
   # * Load Bestiary Data
   #------------------------------------------------------------------------
   def load_bestiary_data
-	  enemies_encounter 		= $game_system.enemy_encounter
-	  enemies_slain	  		  = $game_system.enemy_slain
 	  enemies_slain_total  	= $game_system.total_enemy_slain
 	  # Place list into data based on the number of enemies slain
 	  if enemies_slain_total > 0
 	    $data_enemies.each_index do |id|
         if @enemy_list.include?(id)
 		      @list_window.add_enemy(id,@enemy_list[id])
-          @index = id if @index < 0
+          @list_window.select(id) if @list_window.index < 0
         end
 	    end
 	  end
-  end
-  #------------------------------------------------------------------------
-  # * Frame Update
-  #------------------------------------------------------------------------
-  def update
-    super
-    update_all_windows
-  end
-  #------------------------------------------------------------------------
-  # * Update All Windows
-  #------------------------------------------------------------------------
-  def update_all_windows
-    @left_window.update
-    @right_window.update
-  end
-  #------------------------------------------------------------------------
-  # * Get Enemy
-  #		id : Enemy ID Number
-  #------------------------------------------------------------------------
-  def enemy(id)
-	  @list_window.enemy(id)
   end
   #------------------------------------------------------------------------
   # * Switch to Next Enemy
