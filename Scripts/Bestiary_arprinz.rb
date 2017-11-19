@@ -118,9 +118,8 @@ class Game_Enemy < Game_Battler
   #------------------------------------------------------------------------
   # * override method: Die
   #------------------------------------------------------------------------
-  alias bestiary_enemy_die die
   def die
-	  bestiary_enemy_die
+	  super
     $game_system.add_enemies_slain(enemy) unless $game_system.enemy_slain.include?(enemy)
   end
 end
@@ -246,8 +245,9 @@ class Window_BestiaryList < Window_Selectable
 	  slain = $game_system.enemies_slain(index)
     change_color(normal_color, recorded?(index))
 	  recorded?(index) ? draw_text(item_rect_for_text(index), name, 0) : 
-		  draw_text(item_rect_for_text(id), unknown)
-	  recorded?(index) ? draw_text(item_rect_for_text(index), slain, 1) : 0
+		  draw_text(item_rect_for_text(index), unknown, 0)
+	  recorded?(index) ? draw_text(item_rect_for_text(index), slain, 2) : 
+      draw_text(item_rect_for_text(index), "0", 2)
     msgbox("Created " + name + " at index " + index)
   end
   #------------------------------------------------------------------------
@@ -596,12 +596,25 @@ class Window_BestiaryRight < Window_Selectable
   def element_icon(index)
     # Set icon values based on icon index 
     # (adjust if icon index for each element is different)
-    elem_icon = 101
-	physical_icon = 2
-	wood_icon = 192
-	steel_icon = 146
-	heart_icon = 135
-	byss_icon = 136
+    wood_icon = 192
+    steel_icon = 146
+    heart_icon = 135
+    byss_icon = 136
+
+    element_set = { 
+      3 => 104, # Fire
+      4 => 105, # Ice
+      5 => 106, # Thunder
+      6 => 107, # Water
+      7 => 108, # Earth
+      8 => 109, # Wind
+      9 => 110, # Light
+      10 => 111, # Darkness
+      11 => wood_icon, # Wood
+      12 => steel_icon, # Steel
+      13 => heart_icon, # Heart
+      14 => byss_icon, # Null/Void
+    }
 	
 	# Return icon value based on index passed
 	return index + elem_icon if index > 2 && index < 11
