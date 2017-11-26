@@ -10,7 +10,7 @@
 #
 # * Initial commit: 2017-11-24
 #
-# * Updated: 2017-11-23
+# * Updated: 2017-11-25
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -170,8 +170,20 @@ class Window_CatalogList < Window_Selectable
   # * Object Initialization
   #------------------------------------------------------------------------
   def initialize
-    super(0, fitting_height(2))
+    super(0, fitting_height(2), window_width, window_height)
     @data = []
+  end
+  #------------------------------------------------------------------------
+  # * Get Window Width
+  #------------------------------------------------------------------------
+  def window_width
+    Graphics.width
+  end
+  #------------------------------------------------------------------------
+  # * Get Window Height
+  #------------------------------------------------------------------------
+  def window_height
+    Graphics.height - fitting_height(2)
   end
   #------------------------------------------------------------------------
   # * Get Column Count
@@ -202,6 +214,12 @@ class Window_CatalogList < Window_Selectable
   #------------------------------------------------------------------------
   def unknown
     "????????"
+  end
+  #------------------------------------------------------------------------
+  # * Check If Item Collected
+  #------------------------------------------------------------------------
+  def collected?(item)
+    item != nil
   end
   #------------------------------------------------------------------------
   # * Include In Item List
