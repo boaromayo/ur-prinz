@@ -8,7 +8,9 @@
 #
 # * Initial release: 2017-10-29
 #
-# * Updated: 2017-11-27
+# * Initial commit: 2017-11-
+#
+# * Updated: 2017-11-28
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -17,6 +19,7 @@
 # in your projects.
 #
 # * Changelog:
+#    -- Finished sprite background - 2017-11-28
 #    -- Initial commit - 2017-11-27
 #=======================================================================================
 #===================================================================
@@ -150,11 +153,13 @@ class Scene_Credits < Scene_Base
   	create_credits_window
   end
   #-----------------------------------------------------------------
-  # * Create Sprite Background
+  # * Create Background
   #-----------------------------------------------------------------
   def create_background
   	@sprite_bg = Sprite.new
-
+  	@sprite_bg.bitmap = Cache.picture("catalogue_bg.png")
+  	@sprite_bg.z = 100
+  	center_sprite(@sprite_bg)
   end
   #-----------------------------------------------------------------
   # * Create Credits Window
@@ -162,5 +167,15 @@ class Scene_Credits < Scene_Base
   def create_credits_window
   	@credits_window = Window_Credits.new
   	@credits_window.viewport = @viewport
+  	@credits_window.opacity = 0
+  end
+  #-----------------------------------------------------------------
+  # * Move Sprite to Screen Center
+  #-----------------------------------------------------------------
+  def center_sprite(sprite)
+  	sprite.ox = sprite.bitmap.width / 2
+  	sprite.oy = sprite.bitmap.height / 2
+  	sprite.x = Graphics.width / 2
+  	sprite.y = Graphics.height / 2
   end
 end
