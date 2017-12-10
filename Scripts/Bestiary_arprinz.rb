@@ -89,7 +89,6 @@ class Game_System
   def add_enemies_slain(enemy)
     unless @enemy_slain[enemy.id] > 0
       @total_enemy_slain = @total_enemy_slain + 1
-      @enemy_list[enemy.id] = enemy
     end
     @enemy_slain[enemy.id] = @enemy_slain[enemy.id] + 1
   end
@@ -107,7 +106,10 @@ class Game_Enemy < Game_Battler
   #------------------------------------------------------------------------
   def add_encountered_enemy(enemy_id)
     @enemy_id = enemy_id
-    $game_system.enemy_encounter[@enemy_id] = true unless $game_system.enemy_encounter.include?(@enemy_id)
+    unless $game_system.enemy_encounter.include?(@enemy_id)
+      $game_system.enemy_encounter[@enemy_id] = true
+      $game_system.enemy_list[@enemy_id] = enemy
+    end
   end
   #------------------------------------------------------------------------
   # * override method: Die
@@ -185,8 +187,7 @@ class Window_BestiaryList < Window_Selectable
   #------------------------------------------------------------------------
   def initialize
     super(0, fitting_height(1), Graphics.width, Graphics.height - fitting_height(1))
-    @data = []
-	  @unknown = "????????"
+    @unknown = "????????"
     refresh
     select(0)
     activate
@@ -201,7 +202,7 @@ class Window_BestiaryList < Window_Selectable
   # * Get Enemies Possible
   #------------------------------------------------------------------------
   def item_max
-    @data ? @data.size : 1
+    $game_system.enemy_list.size
   end
   #--------------------------------------------------------------------------
   # * override method: Get Activation State of Selection Item
@@ -214,7 +215,7 @@ class Window_BestiaryList < Window_Selectable
   #    id : Enemy ID
   #------------------------------------------------------------------------
   def recorded?(id)
-    enemy(id) != nil
+    $game_system.enemies_slain(id) > 0
   end
   #------------------------------------------------------------------------
   # * override method: Get Unknown Text
@@ -223,58 +224,21 @@ class Window_BestiaryList < Window_Selectable
     @unknown
   end
   #------------------------------------------------------------------------
-  # * Get Selected Enemy
-  #    id : Enemy ID
-  #------------------------------------------------------------------------
-  def enemy(id)
-    @data && @data[id] != nil ? @data[id] : nil
-  end
-  #--------------------------------------------------------------------------
-  # * Print Enemy Size and Data
-  #--------------------------------------------------------------------------
-  def print_enemies
-    p @data.size
-    @data.each_index {|id| p @data[id] }
-  end
-  #--------------------------------------------------------------------------
-  # * Get Enemy Data
-  #--------------------------------------------------------------------------
-  def enemies
-    @data
-  end
-  #--------------------------------------------------------------------------
-  # * Create Enemy List
-  #--------------------------------------------------------------------------
-  def make_enemy_list
-    @data = $game_system.enemy_list.each_with_index {|enemy,id| add_enemy(id,enemy) }
-  end
-  #------------------------------------------------------------------------
-  # * Add Enemy Data
-  #		id 	   : Enemy ID
-  #		enemy  : Enemy
-  #------------------------------------------------------------------------
-  def add_enemy(id, enemy)
-    @data[id] = enemy
-  end
-  #------------------------------------------------------------------------
   # * Draw Enemy Data
   #   index  : Enemy ID
   #------------------------------------------------------------------------
   def draw_item(index)
-    enemy = @data[index]
-    name = "<name here>"
+    enemy = $game_system.enemy_list[index]
+    name = $game_system.enemy_encounter[index] != nil ? enemy.name : unknown
     slain = $game_system.enemies_slain(index)
     change_color(normal_color, recorded?(index))
-    $game_system.enemy_encounter[index] ? draw_text(item_rect_for_text(index), name, 0) : 
-      draw_text(item_rect_for_text(index), unknown, 0)
-    recorded?(index) ? draw_text(item_rect_for_text(index), slain, 2) : 
-      draw_text(item_rect_for_text(index), "0", 2)
+    draw_text(item_rect_for_text(index), name, 0)
+    draw_text(item_rect_for_text(index), slain, 2)
   end
   #------------------------------------------------------------------------
   # * Refresh
   #------------------------------------------------------------------------
   def refresh
-    make_enemy_list
     create_contents
     draw_all_items
   end
@@ -699,7 +663,7 @@ class Window_MenuCommand < Window_Command
   # * new method: Get Activation State of Bestiary
   #--------------------------------------------------------------------------
   def bestiary_enabled
-    $game_system.total_enemy_slain > 0
+    return true
   end
 end
 
@@ -746,7 +710,6 @@ class Scene_Bestiary < Scene_Base
     @index = -1
     @enemy_list = $game_system.enemy_list
     create_bestiary_list_windows
-    print_bestiary_data
     #create_bestiary_windows(@enemy_list[@index])
   end
   #------------------------------------------------------------------------
@@ -794,8 +757,8 @@ class Scene_Bestiary < Scene_Base
   #------------------------------------------------------------------------
   def create_right_window(enemy)
     @right_window = Window_BestiaryRight.new(enemy)
-	@right_window.deactivate
-	@right_window.hide
+	  @right_window.deactivate
+	  @right_window.hide
   end
   #------------------------------------------------------------------------
   # * Load Bestiary Data
@@ -804,20 +767,10 @@ class Scene_Bestiary < Scene_Base
     # Place enemy list into window list based on enemies slain
     enemies_slain_total   = $game_system.total_enemy_slain
     if enemies_slain_total > 0
-      @enemy_list.each_with_index do |enemy,id|
-        @list_window.add_enemy(id,enemy)
+      @enemy_list.each_index do |id|
         @index = id if @index < 0
       end
     end
-    # Print out each enemy in window list for debug
-    @list_window.print_enemies
-  end
-  #------------------------------------------------------------------------
-  # * Print Bestiary Data
-  #------------------------------------------------------------------------
-  def print_bestiary_data
-    # Print out each enemy in window list for debug
-    @list_window.print_enemies
   end
   #------------------------------------------------------------------------
   # * Enemy [OK] Processing
