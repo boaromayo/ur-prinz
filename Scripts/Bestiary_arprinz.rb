@@ -11,7 +11,7 @@
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2017-12-10
+# * Updated: 2017-12-18
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -211,14 +211,14 @@ class Window_BestiaryList < Window_Selectable
     recorded?(index)
   end
   #------------------------------------------------------------------------
-  # * Determine If Enemy Recorded
+  # * Determine Enemy Recorded
   #    id : Enemy ID
   #------------------------------------------------------------------------
   def recorded?(id)
     $game_system.enemies_slain(id) > 0
   end
   #------------------------------------------------------------------------
-  # * override method: Get Unknown Text
+  # * Get Unknown Text
   #------------------------------------------------------------------------
   def unknown
     @unknown
@@ -291,6 +291,11 @@ class Window_BestiaryLeft < Window_Base
   def enemy_background(enemy)
     enemy.battle_background
   end
+  #------------------------------------------------------------------------
+  # * Draw Enemy Bitmap
+  #------------------------------------------------------------------------
+  def draw_enemy(enemy)
+  end
 end
 
 #==========================================================================
@@ -349,7 +354,7 @@ class Window_BestiaryRight < Window_Selectable
       draw_elem_stats(enemy)
     elsif mode == 2
 	    draw_enemy_items(enemy, 10, 0)
-	  end
+    end
   end
   #--------------------------------------------------------------------------
   # * Draw Basic Stats
@@ -602,13 +607,14 @@ class Window_BestiaryRight < Window_Selectable
     }
 	
 	# Return icon value based on index passed
-	return index + elem_icon if index > 2 && index < 11
-	return 0 if index == 2
-	return wood_icon if index == 11
-	return steel_icon if index == 12
-	return heart_icon if index == 13
-	return byss_icon if index == 14
-	return physical_icon
+	#return index + elem_icon if index > 2 && index < 11
+	#return 0 if index == 2
+	#return wood_icon if index == 11
+	#return steel_icon if index == 12
+	#return heart_icon if index == 13
+	#return byss_icon if index == 14
+	#return physical_icon
+    return element_set[index]
   end
   #------------------------------------------------------------------------
   # * Draw Element Icons
@@ -692,25 +698,25 @@ class Scene_Menu < Scene_MenuBase
   # * new method: [Bestiary] Window
   #--------------------------------------------------------------------------
   def command_bestiary
-    SceneManager.call(Scene_Bestiary)
+    SceneManager.call(Scene_BestiaryBase)
   end
 end
 
 #==========================================================================
-# ** Scene_Bestiary
+# ** Scene_BestiaryBase
 #--------------------------------------------------------------------------
-#  This class performs the bestiary scene processing.
+#  This class performs the bestiary list scene processing.
 #==========================================================================
-class Scene_Bestiary < Scene_Base
+class Scene_BestiaryBase < Scene_Base
   #------------------------------------------------------------------------
   # * Start Processing
   #------------------------------------------------------------------------
   def start
     super
     @index = -1
-    @enemy_list = $game_system.enemy_list
+    @enemy = $game_system.enemy_list[@index]
     create_bestiary_list_windows
-    #create_bestiary_windows(@enemy_list[@index])
+    load_bestiary_data
   end
   #------------------------------------------------------------------------
   # * Create Bestiary List Windows
@@ -736,8 +742,45 @@ class Scene_Bestiary < Scene_Base
     @list_window.set_handler(:cancel, method(:return_scene))
   end
   #------------------------------------------------------------------------
+  # * Enemy [OK] Processing
+  #------------------------------------------------------------------------
+  def on_enemy_ok
+    determine_enemy
+  end
+  #------------------------------------------------------------------------
+  # * Confirm Enemy
+  #------------------------------------------------------------------------
+  def determine_enemy
+    @index = @list_window.index
+    @enemy = enemy(@index)
+    if enemy
+      SceneManager.call(Scene_Bestiary)
+    end
+  end
+  #------------------------------------------------------------------------
+  # * Get Selected Enemy
+  #------------------------------------------------------------------------
+  def enemy(index)
+    $game_system.enemy_list[index]
+  end
+end
+
+#==========================================================================
+# ** Scene_Bestiary
+#--------------------------------------------------------------------------
+#  This class performs the bestiary scene processing.
+#==========================================================================
+class Scene_Bestiary < Scene_BestiaryBase
+  #------------------------------------------------------------------------
+  # * Start Processing
+  #------------------------------------------------------------------------
+  def start
+    super
+    create_bestiary_windows(enemy)
+  end
+  #------------------------------------------------------------------------
   # * Create Bestiary Windows
-  #		enemy : Enemy Data
+  #   enemy : Enemy Data
   #------------------------------------------------------------------------
   def create_bestiary_windows(enemy)
     create_left_window(enemy)
@@ -745,38 +788,20 @@ class Scene_Bestiary < Scene_Base
   end
   #------------------------------------------------------------------------
   # * Create Left Window
-  #		enemy : Enemy Data
+  #   enemy : Enemy Data
   #------------------------------------------------------------------------
   def create_left_window(enemy)
     @left_window = Window_BestiaryLeft.new(enemy)
-	  @left_window.hide
+    @left_window.hide
   end
   #------------------------------------------------------------------------
   # * Create Right Window
-  #		enemy : Enemy Data
+  #   enemy : Enemy Data
   #------------------------------------------------------------------------
   def create_right_window(enemy)
     @right_window = Window_BestiaryRight.new(enemy)
-	  @right_window.deactivate
-	  @right_window.hide
-  end
-  #------------------------------------------------------------------------
-  # * Load Bestiary Data
-  #------------------------------------------------------------------------
-  def load_bestiary_data
-    # Place enemy list into window list based on enemies slain
-    enemies_slain_total   = $game_system.total_enemy_slain
-    if enemies_slain_total > 0
-      @enemy_list.each_index do |id|
-        @index = id if @index < 0
-      end
-    end
-  end
-  #------------------------------------------------------------------------
-  # * Enemy [OK] Processing
-  #------------------------------------------------------------------------
-  def on_enemy_ok
-    return_scene
+    @right_window.deactivate
+    @right_window.hide
   end
   #------------------------------------------------------------------------
   # * Switch to Next Enemy
