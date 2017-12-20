@@ -256,7 +256,7 @@ class Window_BestiaryLeft < Window_Base
   def initialize(enemy)
     super(0, 0, window_width, Graphics.height)
     @enemy = enemy
-    refresh
+    refresh(enemy)
   end
   #--------------------------------------------------------------------------
   # * Get Window Width
@@ -276,25 +276,37 @@ class Window_BestiaryLeft < Window_Base
   def enemy=(enemy)
     return if @enemy == enemy
     @enemy = enemy
-    refresh
+    refresh(enemy)
   end
   #------------------------------------------------------------------------
   # * Get Enemy Bitmap
   #------------------------------------------------------------------------
   def enemy_bitmap(enemy)
-    sprite = enemy.battler_sprite
-	sprite
+    sprite = Cache.battler(enemy.battler_name, enemy.battler_hue)
+	  sprite
   end
   #------------------------------------------------------------------------
   # * Get Battle Background
   #------------------------------------------------------------------------
-  def enemy_background(enemy)
-    enemy.battle_background
+  def enemy_battleback(enemy)
+    #sprite1 = Cache.battleback1()
+    #sprite2 = Cache.battleback2()
   end
   #------------------------------------------------------------------------
   # * Draw Enemy Bitmap
   #------------------------------------------------------------------------
-  def draw_enemy(enemy)
+  def draw_enemy_graphic(enemy, x, y)
+    bitmap = enemy_bitmap(enemy)
+    bw = bitmap.width
+    bh = bitmap.height
+    src_rect = Rect.new(0, 0, bw, bh)
+    contents.blt(x - bw / 2, y - bh, bitmap, src_rect)
+  end
+  #------------------------------------------------------------------------
+  # * Refresh
+  #------------------------------------------------------------------------
+  def refresh(enemy)
+    draw_enemy_graphic(enemy, window_width / 2, window_height / 2)
   end
 end
 
@@ -714,9 +726,8 @@ class Scene_BestiaryBase < Scene_Base
   def start
     super
     @index = -1
-    @enemy = $game_system.enemy_list[@index]
+    @enemy = enemy(@index)
     create_bestiary_list_windows
-    load_bestiary_data
   end
   #------------------------------------------------------------------------
   # * Create Bestiary List Windows
@@ -753,7 +764,7 @@ class Scene_BestiaryBase < Scene_Base
   def determine_enemy
     @index = @list_window.index
     @enemy = enemy(@index)
-    if enemy
+    if @enemy
       SceneManager.call(Scene_Bestiary)
     end
   end
@@ -776,7 +787,9 @@ class Scene_Bestiary < Scene_BestiaryBase
   #------------------------------------------------------------------------
   def start
     super
-    create_bestiary_windows(enemy)
+    @index = @list_window.index
+    @enemy = enemy(@index)
+    create_bestiary_windows(@enemy)
   end
   #------------------------------------------------------------------------
   # * Create Bestiary Windows
@@ -792,7 +805,6 @@ class Scene_Bestiary < Scene_BestiaryBase
   #------------------------------------------------------------------------
   def create_left_window(enemy)
     @left_window = Window_BestiaryLeft.new(enemy)
-    @left_window.hide
   end
   #------------------------------------------------------------------------
   # * Create Right Window
@@ -800,8 +812,11 @@ class Scene_Bestiary < Scene_BestiaryBase
   #------------------------------------------------------------------------
   def create_right_window(enemy)
     @right_window = Window_BestiaryRight.new(enemy)
-    @right_window.deactivate
-    @right_window.hide
+    @right_window.set_handler(:cancel,   method(:return_scene))
+    @right_window.set_handler(:pagedown, method(:next_enemy))
+    @right_window.set_handler(:pageup,   method(:prev_enemy))
+    @right_window.activate
+    @right_window.show
   end
   #------------------------------------------------------------------------
   # * Switch to Next Enemy
