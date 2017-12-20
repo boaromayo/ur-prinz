@@ -153,14 +153,16 @@ class Window_BestiaryStatus < Window_Help
   #------------------------------------------------------------------------
   def initialize
     super(1)
-    draw_progress
+    refresh
   end
   #------------------------------------------------------------------------
   # * Draw Progress
   #------------------------------------------------------------------------
   def draw_progress
     prog_text = "Progress: " + enemy_now.to_s + "/" + enemy_max.to_s
-    set_text(prog_text)
+    pct_text = enemy_pct.to_s + "%"
+    draw_text_ex(4, 0, prog_text)
+    draw_text(4, 0, contents.width - 8, calc_line_height(pct_text), pct_text, 2)
   end
   #------------------------------------------------------------------------
   # * Get Number of Enemies Slain
@@ -173,6 +175,19 @@ class Window_BestiaryStatus < Window_Help
   #------------------------------------------------------------------------
   def enemy_max
     $data_enemies.size
+  end
+  #------------------------------------------------------------------------
+  # * Get Percentage of Enemies in Bestiary
+  #------------------------------------------------------------------------
+  def enemy_pct
+    ((enemy_now / enemy_max) * 100).to_i
+  end
+  #------------------------------------------------------------------------
+  # * Refresh
+  #------------------------------------------------------------------------
+  def refresh
+    contents.clear
+    draw_progress
   end
 end
 
@@ -719,7 +734,7 @@ end
 #--------------------------------------------------------------------------
 #  This class performs the bestiary list scene processing.
 #==========================================================================
-class Scene_BestiaryBase < Scene_Base
+class Scene_BestiaryBase < Scene_MenuBase
   #------------------------------------------------------------------------
   # * Start Processing
   #------------------------------------------------------------------------
@@ -756,7 +771,8 @@ class Scene_BestiaryBase < Scene_Base
   # * Enemy [OK] Processing
   #------------------------------------------------------------------------
   def on_enemy_ok
-    determine_enemy
+    return_scene
+    #determine_enemy
   end
   #------------------------------------------------------------------------
   # * Confirm Enemy
@@ -764,7 +780,7 @@ class Scene_BestiaryBase < Scene_Base
   def determine_enemy
     @index = @list_window.index
     @enemy = enemy(@index)
-    if @enemy
+    if @enemy != nil
       SceneManager.call(Scene_Bestiary)
     end
   end
