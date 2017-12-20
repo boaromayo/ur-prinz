@@ -180,7 +180,7 @@ class Window_BestiaryStatus < Window_Help
   # * Get Percentage of Enemies in Bestiary
   #------------------------------------------------------------------------
   def enemy_pct
-    ((enemy_now / enemy_max) * 100).to_i
+    ((enemy_now.to_f / enemy_max) * 100).to_i
   end
   #------------------------------------------------------------------------
   # * Refresh
