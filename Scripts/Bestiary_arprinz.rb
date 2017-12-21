@@ -23,7 +23,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
-#    -- Fixed enemy sprite bug  - 2017-12-21
+#    -- Fixed enemy sprite bug and other bugs - 2017-12-21
 #    -- Initial v0.8.1 alpha release - 2017-12-20
 #    -- Added enemy name and number slain - 2017-11-20
 #    -- Fixed bug that prevents leaving bestiary menu - 2017-11-17
@@ -88,11 +88,11 @@ class Game_System
   #------------------------------------------------------------------------
   # * new method: Add Enemies Slain
   #------------------------------------------------------------------------
-  def add_enemies_slain(enemy)
-    unless @enemy_slain[enemy.id] > 0
+  def add_enemies_slain(enemy_id)
+    unless @enemy_slain[enemy_id] > 0
       @total_enemy_slain = @total_enemy_slain + 1
     end
-    @enemy_slain[enemy.id] = @enemy_slain[enemy.id] + 1
+    @enemy_slain[enemy_id] = @enemy_slain[enemy_id] + 1
   end
 end
 
@@ -110,8 +110,8 @@ class Game_Enemy < Game_Battler
     @enemy_id = enemy_id
     unless $game_system.enemy_encounter.include?(@enemy_id)
       $game_system.enemy_encounter[@enemy_id] = true
-      # Add enemy name to list if encountered
-      $game_system.enemy_list[@enemy_id] = enemy
+      # Add enemy to list if encountered
+      $game_system.enemy_list[@enemy_id] = self
     end
   end
   #------------------------------------------------------------------------
@@ -119,7 +119,8 @@ class Game_Enemy < Game_Battler
   #------------------------------------------------------------------------
   def die
 	  super
-    $game_system.add_enemies_slain(enemy) unless $game_system.enemy_slain.include?(enemy)
+    # Enable access to enemy in list if slain
+    $game_system.add_enemies_slain(@enemy_id) unless $game_system.enemy_slain.include?(@enemy_id)
   end
 end
 
@@ -396,7 +397,7 @@ class Window_BestiaryRight < Window_Selectable
       elsif mode == 1
         draw_elem_stats(enemy)
       elsif mode == 2
-       draw_enemy_items(enemy, 4, 0)
+        draw_enemy_items(enemy, 4, 0)
       end
     end
   end
@@ -452,18 +453,13 @@ class Window_BestiaryRight < Window_Selectable
     1..10 # 1 => Death, 10 => Burn?
   end
   #--------------------------------------------------------------------------
-  # * Status 
-  #--------------------------------------------------------------------------
-  def hp(enemy);  enemy.params[0];  end               # Enemy maximum HP
-  def mp(enemy);  enemy.params[1];  end               # Enemy maximum MP
-  #--------------------------------------------------------------------------
   # * Draw Enemy HP
   #--------------------------------------------------------------------------
   def draw_enemy_hp(enemy, x, y, width = 128)
     change_color(system_color)
     draw_text(x, y, width, line_height, Vocab::hp)
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, hp(enemy), 2)
+    draw_text(x + width - 32, y, width, line_height, enemy.hp, 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy MP
@@ -472,7 +468,7 @@ class Window_BestiaryRight < Window_Selectable
     change_color(system_color)
     draw_text(x, y, width, line_height, Vocab::mp)
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, mp(enemy), 2)
+    draw_text(x + width - 32, y, width, line_height, enemy.mp, 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy TP
@@ -490,17 +486,17 @@ class Window_BestiaryRight < Window_Selectable
     change_color(system_color)
     draw_text(x, y, width, line_height, Vocab::param(param_id))
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, enemy.params[param_id], 2)
+    draw_text(x + width - 32, y, width, line_height, enemy.param(param_id), 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy Ex-Parameters
   #--------------------------------------------------------------------------
-  def draw_enemy_xparams(enemy, x, y, width = 128)
+  def draw_enemy_eva(enemy, x, y, width = 128)
     change_color(system_color)
-  draw_text(x, y, width, line_height, "EVA")
-  change_color(normal_color)
-  draw_text(x + width - 32, y, width, line_height, "0", 1)
-  draw_text(x + width - 32 + 4, y, 16, line_height, "%", 1)
+    draw_text(x, y, width, line_height, "EVA")
+    change_color(normal_color)
+    draw_text(x + width - 32, y, width, line_height, enemy.eva, 1)
+    draw_text(x + width - 32 + 4, y, 16, line_height, "%", 1)
   end
   #--------------------------------------------------------------------------
   # * Create Enemy Defense Ratings List
