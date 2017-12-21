@@ -23,6 +23,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Fixed enemy sprite bug  - 2017-12-21
 #    -- Initial v0.8.1 alpha release - 2017-12-20
 #    -- Added enemy name and number slain - 2017-11-20
 #    -- Fixed bug that prevents leaving bestiary menu - 2017-11-17
@@ -317,14 +318,15 @@ class Window_BestiaryLeft < Window_Base
     bw = bitmap.width
     bh = bitmap.height
     src_rect = Rect.new(0, 0, bw, bh)
-    contents.blt(x - bw / 2, y - bh, bitmap, src_rect)
+    contents.blt(x - bw / 2, y - bh / 2, bitmap, src_rect)
   end
   #------------------------------------------------------------------------
   # * Refresh
   #------------------------------------------------------------------------
   def refresh(enemy)
+    contents.clear
     if enemy != nil
-      draw_enemy_graphic(enemy, window_width / 2, window_height - window_height / 4)
+      draw_enemy_graphic(enemy, window_width / 2, window_height / 2)
     end
   end
 end
