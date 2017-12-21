@@ -11,7 +11,7 @@
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2017-12-20
+# * Updated: 2017-12-21
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -109,6 +109,7 @@ class Game_Enemy < Game_Battler
     @enemy_id = enemy_id
     unless $game_system.enemy_encounter.include?(@enemy_id)
       $game_system.enemy_encounter[@enemy_id] = true
+      # Add enemy name to list if encountered
       $game_system.enemy_list[@enemy_id] = enemy
     end
   end
