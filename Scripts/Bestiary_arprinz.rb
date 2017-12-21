@@ -5,13 +5,13 @@
 # shows the quantity of enemies slain, along with other stats, from health
 # to treasures to weaknesses and strengths.
 #
-# * Version: 1.0.1
+# * Version: 0.8.1
 #
 # * Initial release: 2016-04-25
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2017-12-18
+# * Updated: 2017-12-20
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -23,6 +23,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Initial v0.8.1 alpha release - 2017-12-20
 #    -- Added enemy name and number slain - 2017-11-20
 #    -- Fixed bug that prevents leaving bestiary menu - 2017-11-17
 #    -- Fixed additional crashing bugs - 2017-11-16
@@ -268,10 +269,10 @@ class Window_BestiaryLeft < Window_Base
   #------------------------------------------------------------------------
   # * Object Initialization
   #------------------------------------------------------------------------
-  def initialize(enemy)
+  def initialize(enemy = nil)
     super(0, 0, window_width, Graphics.height)
     @enemy = enemy
-    refresh(enemy)
+    self.visible = false
   end
   #--------------------------------------------------------------------------
   # * Get Window Width
@@ -321,7 +322,9 @@ class Window_BestiaryLeft < Window_Base
   # * Refresh
   #------------------------------------------------------------------------
   def refresh(enemy)
-    draw_enemy_graphic(enemy, window_width / 2, window_height / 2)
+    if enemy != nil
+      draw_enemy_graphic(enemy, window_width / 2, window_height - window_height / 4)
+    end
   end
 end
 
@@ -334,16 +337,24 @@ class Window_BestiaryRight < Window_Selectable
   #------------------------------------------------------------------------
   # * Object Initialization
   #------------------------------------------------------------------------
-  def initialize(enemy)
+  def initialize(enemy = nil)
     super(window_width, 0, window_width, Graphics.height)
-	  create_ratings
-    refresh(enemy)
+    @enemy = enemy
+    self.visible = false
   end
   #--------------------------------------------------------------------------
   # * Get Window Width
   #--------------------------------------------------------------------------
   def window_width
     return Graphics.width / 2
+  end
+  #------------------------------------------------------------------------
+  # * Set Enemy
+  #------------------------------------------------------------------------
+  def enemy=(enemy)
+    return if @enemy == enemy
+    @enemy = enemy
+    refresh(enemy)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy Name
@@ -356,7 +367,7 @@ class Window_BestiaryRight < Window_Selectable
   # * Draw Horizontal Line
   #--------------------------------------------------------------------------
   def draw_horz_line(y)
-    line_y = y + line_height / 2 - 1
+    line_y = y + line_height / 4 - 1
     contents.fill_rect(0, line_y, contents_width, 2, line_color)
   end
   #--------------------------------------------------------------------------
@@ -364,23 +375,26 @@ class Window_BestiaryRight < Window_Selectable
   #--------------------------------------------------------------------------
   def line_color
     color = system_color
-    color.alpha = 48
+    color.alpha = 160
     color
   end
-  #--------------------------------------------------------------------------
+#--------------------------------------------------------------------------
   # * Refresh
   #--------------------------------------------------------------------------
   def refresh(enemy, mode = 0)
     contents.clear
-    draw_enemy_name(enemy, window_width - 10, 0)
-    draw_horz_line(line_height + line_height / 4 + 3)
-    if mode == 0
-      draw_basic_stats(enemy, 10, 0)
-      draw_other_stats(enemy, 10, line_height * 3)
-    elsif mode == 1
-      draw_elem_stats(enemy)
-    elsif mode == 2
-	    draw_enemy_items(enemy, 10, 0)
+    create_ratings
+    draw_horz_line(line_height)
+    if enemy != nil
+      draw_enemy_name(enemy, 4, 0)
+      if mode == 0
+        draw_basic_stats(enemy, 4, 0)
+        draw_other_stats(enemy, 4, line_height * 3)
+      elsif mode == 1
+        draw_elem_stats(enemy)
+      elsif mode == 2
+       draw_enemy_items(enemy, 4, 0)
+      end
     end
   end
   #--------------------------------------------------------------------------
@@ -389,7 +403,7 @@ class Window_BestiaryRight < Window_Selectable
   def draw_basic_stats(enemy, x, y)
     draw_enemy_hp(enemy, x, y + line_height * 2)
     draw_enemy_mp(enemy, x, y + line_height * 3)
-	#draw_enemy_tp(enemy, x, y + line_height * 4)
+  #draw_enemy_tp(enemy, x, y + line_height * 4)
   end
   #--------------------------------------------------------------------------
   # * Draw Other Stats
@@ -404,81 +418,86 @@ class Window_BestiaryRight < Window_Selectable
     # Add the defense ratings starting from weakest => absorbing
     add_ratings
     elements_count.each do |elem|
-	    draw_enemy_element(enemy, 10, line_height * (elem + 2), elem)
-	  end
-	  change_color(normal_color)
+      draw_enemy_element(enemy, 10, line_height * (elem + 2), elem)
+    end
+    change_color(normal_color)
   end
   #--------------------------------------------------------------------------
   # * Enemy Parameter Count
   #--------------------------------------------------------------------------
   def param_count
-    [2..7] # 2 => ATK, 7 => LCK
+    2..7 # 2 => ATK, 7 => LCK
   end
   #--------------------------------------------------------------------------
   # * Enemy S-Parameter Count
   #--------------------------------------------------------------------------
   def sparam_count
-    [1..5] # 1 => , 5 =>
+    1..5 # 1 => , 5 =>
   end
   #--------------------------------------------------------------------------
   # * Enemy Element Rate Count
-  #	    NOTE: Adjust number of elements counted based on elements used.
+  #     NOTE: Adjust number of elements counted based on elements used.
   #--------------------------------------------------------------------------
   def elements_count
-    [3..14] # 3 => Fire, 14 => Void/Null
+    3..14 # 3 => Fire, 14 => Void/Null
   end
   #--------------------------------------------------------------------------
   # * Enemy States Rate Count
-  #		NOTE: Adjust number of states counted based on states used.
+  #   NOTE: Adjust number of states counted based on states used.
   #--------------------------------------------------------------------------
   def states_count
-    [1..10] # 1 => Death, 10 => Burn?
+    1..10 # 1 => Death, 10 => Burn?
   end
+  #--------------------------------------------------------------------------
+  # * Status 
+  #--------------------------------------------------------------------------
+  def hp(enemy);  enemy.params[0];  end               # Enemy maximum HP
+  def mp(enemy);  enemy.params[1];  end               # Enemy maximum MP
   #--------------------------------------------------------------------------
   # * Draw Enemy HP
   #--------------------------------------------------------------------------
-  def draw_enemy_hp(enemy, x, y, width = 288)
+  def draw_enemy_hp(enemy, x, y, width = 128)
     change_color(system_color)
     draw_text(x, y, width, line_height, Vocab::hp)
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, enemy.mhp, 2)
+    draw_text(x + width - 32, y, width, line_height, hp(enemy), 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy MP
   #--------------------------------------------------------------------------
-  def draw_enemy_mp(enemy, x, y, width = 288)
+  def draw_enemy_mp(enemy, x, y, width = 128)
     change_color(system_color)
     draw_text(x, y, width, line_height, Vocab::mp)
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, enemy.mmp, 2)
+    draw_text(x + width - 32, y, width, line_height, mp(enemy), 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy TP
   #--------------------------------------------------------------------------
-  def draw_enemy_tp(enemy, x, y, width = 288)
+  def draw_enemy_tp(enemy, x, y, width = 128)
     change_color(system_color)
     draw_text(x, y, width, line_height, Vocab::tp)
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, enemy.tp, 2)
+    draw_text(x + width - 32, y, width, line_height, "0", 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy Parameters
   #--------------------------------------------------------------------------
-  def draw_enemy_param(enemy, x, y, param_id, width = 172)
+  def draw_enemy_param(enemy, x, y, param_id, width = 128)
     change_color(system_color)
     draw_text(x, y, width, line_height, Vocab::param(param_id))
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, enemy.param(param_id), 2)
+    draw_text(x + width - 32, y, width, line_height, enemy.params[param_id], 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy Ex-Parameters
   #--------------------------------------------------------------------------
-  def draw_enemy_eva(enemy, x, y, width = 172)
+  def draw_enemy_xparams(enemy, x, y, width = 128)
     change_color(system_color)
-	draw_text(x, y, width, line_height, "EVA")
-	change_color(normal_color)
-	draw_text(x + width - 32, y, width, line_height, enemy.eva, 1)
-	draw_text(x + width - 32 + 4, y, 16, line_height, "%", 1)
+  draw_text(x, y, width, line_height, "EVA")
+  change_color(normal_color)
+  draw_text(x + width - 32, y, width, line_height, "0", 1)
+  draw_text(x + width - 32 + 4, y, 16, line_height, "%", 1)
   end
   #--------------------------------------------------------------------------
   # * Create Enemy Defense Ratings List
@@ -725,24 +744,30 @@ class Scene_Menu < Scene_MenuBase
   # * new method: [Bestiary] Window
   #--------------------------------------------------------------------------
   def command_bestiary
-    SceneManager.call(Scene_BestiaryBase)
+    SceneManager.call(Scene_Bestiary)
   end
 end
 
 #==========================================================================
-# ** Scene_BestiaryBase
+# ** Scene_Bestiary
 #--------------------------------------------------------------------------
-#  This class performs the bestiary list scene processing.
+#  This class performs the bestiary scene processing.
 #==========================================================================
-class Scene_BestiaryBase < Scene_MenuBase
+class Scene_Bestiary < Scene_MenuBase
+  #------------------------------------------------------------------------
+  # * Object Initialization
+  #------------------------------------------------------------------------
+  def initialize
+    @index = -1
+    @enemy = enemy(@index)
+  end
   #------------------------------------------------------------------------
   # * Start Processing
   #------------------------------------------------------------------------
   def start
     super
-    @index = -1
-    @enemy = enemy(@index)
     create_bestiary_list_windows
+    create_bestiary_windows
   end
   #------------------------------------------------------------------------
   # * Create Bestiary List Windows
@@ -750,6 +775,13 @@ class Scene_BestiaryBase < Scene_MenuBase
   def create_bestiary_list_windows
     create_status_window
     create_list_window
+  end
+  #------------------------------------------------------------------------
+  # * Create Bestiary Windows
+  #------------------------------------------------------------------------
+  def create_bestiary_windows
+    create_left_window
+    create_right_window
   end
   #------------------------------------------------------------------------
   # * Create Stat Window
@@ -768,11 +800,34 @@ class Scene_BestiaryBase < Scene_MenuBase
     @list_window.set_handler(:cancel, method(:return_scene))
   end
   #------------------------------------------------------------------------
+  # * Create Left Window
+  #------------------------------------------------------------------------
+  def create_left_window
+    @left_window = Window_BestiaryLeft.new
+  end
+  #------------------------------------------------------------------------
+  # * Create Right Window
+  #------------------------------------------------------------------------
+  def create_right_window
+    @right_window = Window_BestiaryRight.new
+    @right_window.set_handler(:cancel,   method(:on_enemy_cancel))
+    @right_window.set_handler(:pagedown, method(:next_enemy))
+    @right_window.set_handler(:pageup,   method(:prev_enemy))
+    @right_window.set_handler(:up,       method(:cursor_up))
+    @right_window.set_handler(:down,     method(:cursor_down))
+  end
+  #------------------------------------------------------------------------
   # * Enemy [OK] Processing
   #------------------------------------------------------------------------
   def on_enemy_ok
-    return_scene
-    #determine_enemy
+    determine_enemy
+  end
+  #------------------------------------------------------------------------
+  # * Enemy [Cancel]
+  #------------------------------------------------------------------------
+  def on_enemy_cancel
+    hide_bestiary_windows
+    show_bestiary_list_windows
   end
   #------------------------------------------------------------------------
   # * Confirm Enemy
@@ -781,67 +836,68 @@ class Scene_BestiaryBase < Scene_MenuBase
     @index = @list_window.index
     @enemy = enemy(@index)
     if @enemy != nil
-      SceneManager.call(Scene_Bestiary)
+      @left_window.enemy = @enemy
+      @right_window.enemy = @enemy
+      hide_bestiary_list_windows
+      show_bestiary_windows
     end
   end
+  #------------------------------------------------------------------------
+  # * Show Bestiary List Windows
+  #------------------------------------------------------------------------
+  def show_bestiary_list_windows
+    show_window(@status_window)
+    show_window(@list_window)
+  end
+  #------------------------------------------------------------------------
+  # * Hide Bestiary List Windows
+  #------------------------------------------------------------------------
+  def hide_bestiary_list_windows
+    hide_window(@status_window)
+    hide_window(@list_window)
+  end
+  #------------------------------------------------------------------------
+  # * Show Bestiary Windows
+  #------------------------------------------------------------------------
+  def show_bestiary_windows
+    show_window(@left_window)
+    show_window(@right_window)
+  end
+  #------------------------------------------------------------------------
+  # * Hide Bestiary Windows
+  #------------------------------------------------------------------------
+  def hide_bestiary_windows
+    hide_window(@left_window)
+    hide_window(@right_window)
+  end
+  #------------------------------------------------------------------------
+  # * Show Window
+  #------------------------------------------------------------------------
+  def show_window(window)
+    window.activate
+    window.show
+  end
+  #------------------------------------------------------------------------
+  # * Hide Window
+  #------------------------------------------------------------------------
+  def hide_window(window)
+    window.deactivate
+    window.hide
+  end  
   #------------------------------------------------------------------------
   # * Get Selected Enemy
   #------------------------------------------------------------------------
   def enemy(index)
     $game_system.enemy_list[index]
   end
-end
-
-#==========================================================================
-# ** Scene_Bestiary
-#--------------------------------------------------------------------------
-#  This class performs the bestiary scene processing.
-#==========================================================================
-class Scene_Bestiary < Scene_BestiaryBase
   #------------------------------------------------------------------------
-  # * Start Processing
+  # * Switch to Previous Enemy
   #------------------------------------------------------------------------
-  def start
-    super
-    @index = @list_window.index
-    @enemy = enemy(@index)
-    create_bestiary_windows(@enemy)
-  end
-  #------------------------------------------------------------------------
-  # * Create Bestiary Windows
-  #   enemy : Enemy Data
-  #------------------------------------------------------------------------
-  def create_bestiary_windows(enemy)
-    create_left_window(enemy)
-    create_right_window(enemy)
-  end
-  #------------------------------------------------------------------------
-  # * Create Left Window
-  #   enemy : Enemy Data
-  #------------------------------------------------------------------------
-  def create_left_window(enemy)
-    @left_window = Window_BestiaryLeft.new(enemy)
-  end
-  #------------------------------------------------------------------------
-  # * Create Right Window
-  #   enemy : Enemy Data
-  #------------------------------------------------------------------------
-  def create_right_window(enemy)
-    @right_window = Window_BestiaryRight.new(enemy)
-    @right_window.set_handler(:cancel,   method(:return_scene))
-    @right_window.set_handler(:pagedown, method(:next_enemy))
-    @right_window.set_handler(:pageup,   method(:prev_enemy))
-    @right_window.activate
-    @right_window.show
+  def prev_enemy
   end
   #------------------------------------------------------------------------
   # * Switch to Next Enemy
   #------------------------------------------------------------------------
   def next_enemy
-  end
-  #------------------------------------------------------------------------
-  # * Switch to Previous Enemy
-  #------------------------------------------------------------------------
-  def prev_enemy
   end
 end
