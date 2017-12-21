@@ -120,7 +120,7 @@ class Game_Enemy < Game_Battler
   def die
 	  super
     # Enable access to enemy in list if slain
-    $game_system.add_enemies_slain(@enemy_id) unless $game_system.enemy_slain.include?(@enemy_id)
+    $game_system.add_enemies_slain(@enemy_id)
   end
 end
 
