@@ -11,7 +11,7 @@
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2017-12-21
+# * Updated: 2017-12-30
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -327,7 +327,7 @@ class Window_BestiaryLeft < Window_Base
   def refresh(enemy)
     contents.clear
     if enemy != nil
-      draw_enemy_graphic(enemy, window_width / 2, window_height / 2)
+      draw_enemy_graphic(enemy, window_width / 2, window_height)
     end
   end
 end
@@ -344,6 +344,7 @@ class Window_BestiaryRight < Window_Selectable
   def initialize(enemy = nil)
     super(window_width, 0, window_width, Graphics.height)
     @enemy = enemy
+    @mode = 0
     self.visible = false
   end
   #--------------------------------------------------------------------------
@@ -382,7 +383,7 @@ class Window_BestiaryRight < Window_Selectable
     color.alpha = 160
     color
   end
-#--------------------------------------------------------------------------
+  #--------------------------------------------------------------------------
   # * Refresh
   #--------------------------------------------------------------------------
   def refresh(enemy, mode = 0)
@@ -400,6 +401,31 @@ class Window_BestiaryRight < Window_Selectable
         draw_enemy_items(enemy, 4, 0)
       end
     end
+  end
+  #--------------------------------------------------------------------------
+  # * Previous Mode
+  #--------------------------------------------------------------------------
+  def previous_mode
+    if @mode > 0
+      @mode -= 1
+      refresh(@enemy, @mode)
+    end
+  end
+  #--------------------------------------------------------------------------
+  # * Next Mode
+  #--------------------------------------------------------------------------
+  def next_mode
+    if @mode < 2
+      @mode += 1
+      refresh(@enemy, @mode)
+    end
+  end
+  #--------------------------------------------------------------------------
+  # * override method: Hide Window
+  #--------------------------------------------------------------------------
+  def hide
+    super
+    @mode = 0 # Set to first panel of window during hiding process
   end
   #--------------------------------------------------------------------------
   # * Draw Basic Stats
@@ -422,7 +448,7 @@ class Window_BestiaryRight < Window_Selectable
     # Add the defense ratings starting from weakest => absorbing
     add_ratings
     elements_count.each do |elem|
-      draw_enemy_element(enemy, 10, line_height * (elem + 2), elem)
+      draw_enemy_element(enemy, 10, line_height * elem, elem)
     end
     change_color(normal_color)
   end
@@ -532,38 +558,40 @@ class Window_BestiaryRight < Window_Selectable
   #--------------------------------------------------------------------------
   # * Draw Enemy Element Defense Stats
   #--------------------------------------------------------------------------
-  def draw_enemy_element(enemy, x, y, param_id, width = 172)
+  def draw_enemy_element(enemy, x, y, param_id, width = 128)
     # Element tag to track enemy's element defense
     element_def = ""
-    erate = enemy.element_rate(param_id)
-	# Branch rating based on enemy's element defense
+    erate = enemy.element_rate(param_id) * 100 # Multiply to return percentages
+    # Branch rating based on enemy's element defense
     if erate >= 200
-	  change_color(text_color(10))
+      change_color(text_color(10))
       element_def = rating(0)
     elsif erate > 100
-	  change_color(text_color(2))
+    change_color(text_color(2))
       element_def = rating(1)
     elsif erate == 100
-	  change_color(normal_color, false)
+      change_color(normal_color)
       element_def = rating(2)
     elsif erate > 0
+      change_color(normal_color, false)
       element_def = rating(3)
     elsif erate == 0
+      change color(normal_color, false)
       element_def = rating(4)
     else
-	  change_color(text_color(3))
+    change_color(text_color(3))
       element_def = rating(5)
     end
-	draw_icon(element_icon(param_id), x, y)
+    draw_icon(element_icon(param_id), x, y)
     draw_text(x + width - 32, y, width, line_height, element_def, 2)
   end
   #------------------------------------------------------------------------
   # * Draw Enemy State Defense Stats
   #------------------------------------------------------------------------
-  def draw_enemy_state(enemy, x, y, param_id, width = 172)
+  def draw_enemy_state(enemy, x, y, param_id, width = 128)
     # State defense tag to track enemy's status defense
     state_def = ""
-    srate = enemy.state_rate(param_id)
+    srate = enemy.state_rate(param_id) * 100
 	# Branch rating based on enemy's state defense
 	if srate >= 200
 	  change_color(text_color(10))
@@ -572,11 +600,13 @@ class Window_BestiaryRight < Window_Selectable
 	  change_color(text_color(2))
 	  state_def = rating(1)
 	elsif srate == 100
-	  change_color(normal_color, false)
+	  change_color(normal_color)
 	  state_def = rating(2)
 	elsif srate > 0
+    change_color(normal_color, false)
 	  state_def = rating(3)
 	elsif srate == 0
+    change_color(normal_color, false)
 	  state_def = rating(4)
 	else
 	  change_color(text_color(3))
@@ -587,10 +617,10 @@ class Window_BestiaryRight < Window_Selectable
   #------------------------------------------------------------------------
   # * Draw Enemy Debuff Defense Stats
   #------------------------------------------------------------------------
-  def draw_enemy_debuff(enemy, x, y, param_id, width = 172)
+  def draw_enemy_debuff(enemy, x, y, param_id, width = 128)
     # Debuff defense tag to track enemy's status defense
     debuff_def = ""
-    debuff_rate = enemy.debuff_rate(param_id)
+    debuff_rate = enemy.debuff_rate(param_id) * 100
 	# Branch rating based on enemy's debuff defense
 	if debuff_rate >= 200
 	  change_color(text_color(10))
@@ -599,11 +629,13 @@ class Window_BestiaryRight < Window_Selectable
 	  change_color(text_color(2))
 	  debuff_def = rating(1)
 	elsif debuff_rate == 100
-	  change_color(normal_color, false)
+	  change_color(normal_color)
 	  debuff_def = rating(2)
 	elsif debuff_rate > 0
+    change_color(normal_color, false)
 	  debuff_def = rating(3)
 	elsif debuff_rate == 0
+    change_color(normal_color, false)
 	  debuff_def = rating(4)
 	else
 	  change_color(text_color(3))
@@ -614,7 +646,7 @@ class Window_BestiaryRight < Window_Selectable
   #------------------------------------------------------------------------
   # * Draw Enemy Dropped Items
   #------------------------------------------------------------------------
-  def draw_enemy_items(enemy, x, y, width = 172)
+  def draw_enemy_items(enemy, x, y, width = 128)
     items = enemy.drop_items
     change_color(system_color)
     draw_text(x, y, width, line_height, "Drops")
@@ -666,8 +698,6 @@ class Window_BestiaryRight < Window_Selectable
   #  Note: This method is for the default iconset.
   #------------------------------------------------------------------------
   #def element_icon(index)
-    #elem_icon = 93
-	#physical_icon = 107
 	  #element_set = {
       #3 => 96, # Fire
       #4 => 97, # Ice
@@ -683,9 +713,7 @@ class Window_BestiaryRight < Window_Selectable
       #14 => 120, # Null/Void
     #}
 	# Return icon value based on index passed
-	#return index + elem_icon if index > 2 && index < 11
-	#return 0 if index == 2
-	#return physical_icon
+    #return element_set[index]
   #end
 end
 
@@ -810,10 +838,10 @@ class Scene_Bestiary < Scene_MenuBase
   def create_right_window
     @right_window = Window_BestiaryRight.new
     @right_window.set_handler(:cancel,   method(:on_enemy_cancel))
-    @right_window.set_handler(:pagedown, method(:next_enemy))
-    @right_window.set_handler(:pageup,   method(:prev_enemy))
-    @right_window.set_handler(:up,       method(:cursor_up))
-    @right_window.set_handler(:down,     method(:cursor_down))
+    #@right_window.set_handler(:pagedown, method(:next_enemy))
+    #@right_window.set_handler(:pageup,   method(:prev_enemy))
+    @right_window.set_handler(:pageup,       method(:cursor_up))
+    @right_window.set_handler(:pagedown,     method(:cursor_down))
   end
   #------------------------------------------------------------------------
   # * Enemy [OK] Processing
@@ -898,5 +926,17 @@ class Scene_Bestiary < Scene_MenuBase
   # * Switch to Next Enemy
   #------------------------------------------------------------------------
   def next_enemy
+  end
+  #------------------------------------------------------------------------
+  # * Cursor Up
+  #------------------------------------------------------------------------
+  def cursor_up
+    @right_window.previous_mode
+  end
+  #------------------------------------------------------------------------
+  # * Cursor Down
+  #------------------------------------------------------------------------
+  def cursor_down
+    @right_window.next_mode
   end
 end
