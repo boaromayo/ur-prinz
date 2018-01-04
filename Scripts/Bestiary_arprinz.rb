@@ -11,7 +11,7 @@
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2017-12-30
+# * Updated: 2018-01-03
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -23,6 +23,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Fixed second mode bugs - 2018-01-03
 #    -- Fixed enemy sprite bug and other bugs - 2017-12-21
 #    -- Initial v0.8.1 alpha release - 2017-12-20
 #    -- Added enemy name and number slain - 2017-11-20
@@ -359,7 +360,7 @@ class Window_BestiaryRight < Window_Selectable
   def enemy=(enemy)
     return if @enemy == enemy
     @enemy = enemy
-    refresh(enemy)
+    refresh
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy Name
@@ -386,19 +387,19 @@ class Window_BestiaryRight < Window_Selectable
   #--------------------------------------------------------------------------
   # * Refresh
   #--------------------------------------------------------------------------
-  def refresh(enemy, mode = 0)
+  def refresh(mode = 0)
     contents.clear
     create_ratings
     draw_horz_line(line_height)
-    if enemy != nil
-      draw_enemy_name(enemy, 4, 0)
+    if @enemy != nil
+      draw_enemy_name(@enemy, 4, 0)
       if mode == 0
-        draw_basic_stats(enemy, 4, 0)
-        draw_other_stats(enemy, 4, line_height * 3)
+        draw_basic_stats(@enemy, 4, 0)
+        draw_other_stats(@enemy, 4, line_height * 3)
       elsif mode == 1
-        draw_elem_stats(enemy)
+        draw_elem_stats(@enemy)
       elsif mode == 2
-        draw_enemy_items(enemy, 4, 0)
+        draw_enemy_items(@enemy, 4, 0)
       end
     end
   end
@@ -408,8 +409,11 @@ class Window_BestiaryRight < Window_Selectable
   def previous_mode
     if @mode > 0
       @mode -= 1
-      refresh(@enemy, @mode)
+    else
+      @mode = 2
     end
+    refresh(@mode)
+    activate
   end
   #--------------------------------------------------------------------------
   # * Next Mode
@@ -417,8 +421,11 @@ class Window_BestiaryRight < Window_Selectable
   def next_mode
     if @mode < 2
       @mode += 1
-      refresh(@enemy, @mode)
+    else
+      @mode = 0
     end
+    refresh(@mode)
+    activate
   end
   #--------------------------------------------------------------------------
   # * override method: Hide Window
@@ -426,6 +433,7 @@ class Window_BestiaryRight < Window_Selectable
   def hide
     super
     @mode = 0 # Set to first panel of window during hiding process
+    refresh(@mode)
   end
   #--------------------------------------------------------------------------
   # * Draw Basic Stats
@@ -448,7 +456,7 @@ class Window_BestiaryRight < Window_Selectable
     # Add the defense ratings starting from weakest => absorbing
     add_ratings
     elements_count.each do |elem|
-      draw_enemy_element(enemy, 10, line_height * elem, elem)
+      draw_enemy_defense(enemy, 4, line_height * (elem - 1), elem)
     end
     change_color(normal_color)
   end
@@ -485,7 +493,7 @@ class Window_BestiaryRight < Window_Selectable
     change_color(system_color)
     draw_text(x, y, width, line_height, Vocab::hp)
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, enemy.hp, 2)
+    draw_text(x + width - 32, y, width, line_height, enemy.mhp, 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy MP
@@ -494,7 +502,7 @@ class Window_BestiaryRight < Window_Selectable
     change_color(system_color)
     draw_text(x, y, width, line_height, Vocab::mp)
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, enemy.mp, 2)
+    draw_text(x + width - 32, y, width, line_height, enemy.mmp, 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy TP
@@ -556,92 +564,92 @@ class Window_BestiaryRight < Window_Selectable
     add_rating("Absorb",    :absorb)
   end
   #--------------------------------------------------------------------------
-  # * Draw Enemy Element Defense Stats
+  # * Draw Enemy Element Defense
   #--------------------------------------------------------------------------
   def draw_enemy_element(enemy, x, y, param_id, width = 128)
-    # Element tag to track enemy's element defense
-    element_def = ""
-    erate = enemy.element_rate(param_id) * 100 # Multiply to return percentages
-    # Branch rating based on enemy's element defense
-    if erate >= 200
+    # Initialize tag to label enemy's element defense rating
+    element_tag = ""
+    rate = enemy.element_rate(param_id) * 100 # Multiply to return percentages
+    # Branch rating based on enemy's element defense rate
+    if rate >= 200
       change_color(text_color(10))
-      element_def = rating(0)
-    elsif erate > 100
-    change_color(text_color(2))
-      element_def = rating(1)
-    elsif erate == 100
+      element_tag = rating(0)
+    elsif rate > 100
+      change_color(text_color(2))
+      element_tag = rating(1)
+    elsif rate == 100
       change_color(normal_color)
-      element_def = rating(2)
-    elsif erate > 0
+      element_tag = rating(2)
+    elsif rate > 0
       change_color(normal_color, false)
-      element_def = rating(3)
-    elsif erate == 0
+      element_tag = rating(3)
+    elsif rate == 0
       change color(normal_color, false)
-      element_def = rating(4)
+      element_tag = rating(4)
     else
-    change_color(text_color(3))
-      element_def = rating(5)
+      change_color(text_color(3))
+      element_tag = rating(5)
     end
     draw_icon(element_icon(param_id), x, y)
-    draw_text(x + width - 32, y, width, line_height, element_def, 2)
+    draw_text(x + width - 32, y, width, line_height, element_tag, 2)
   end
   #------------------------------------------------------------------------
-  # * Draw Enemy State Defense Stats
+  # * Draw Enemy State Defense
   #------------------------------------------------------------------------
   def draw_enemy_state(enemy, x, y, param_id, width = 128)
     # State defense tag to track enemy's status defense
-    state_def = ""
-    srate = enemy.state_rate(param_id) * 100
-	# Branch rating based on enemy's state defense
-	if srate >= 200
+    state_tag = ""
+    rate = enemy.state_rate(param_id) * 100
+	# Branch rating based on enemy's state defense rate
+	if rate >= 200
 	  change_color(text_color(10))
-	  state_def = rating(0)
-	elsif srate > 100
+	  state_tag = rating(0)
+	elsif rate > 100
 	  change_color(text_color(2))
-	  state_def = rating(1)
-	elsif srate == 100
+	  state_tag = rating(1)
+	elsif rate == 100
 	  change_color(normal_color)
-	  state_def = rating(2)
-	elsif srate > 0
+	  state_tag = rating(2)
+	elsif rate > 0
     change_color(normal_color, false)
-	  state_def = rating(3)
-	elsif srate == 0
+	  state_tag = rating(3)
+	elsif rate == 0
     change_color(normal_color, false)
-	  state_def = rating(4)
+	  state_tag = rating(4)
 	else
 	  change_color(text_color(3))
-	  state_def = rating(5)
+	  state_tag = rating(5)
 	end
-	draw_text(x + width - 32, y, width, line_height, state_def, 2)
+	  draw_text(x + width - 32, y, width, line_height, state_tag, 2)
   end
   #------------------------------------------------------------------------
-  # * Draw Enemy Debuff Defense Stats
+  # * Draw Enemy Debuff Defense
   #------------------------------------------------------------------------
   def draw_enemy_debuff(enemy, x, y, param_id, width = 128)
     # Debuff defense tag to track enemy's status defense
-    debuff_def = ""
-    debuff_rate = enemy.debuff_rate(param_id) * 100
-	# Branch rating based on enemy's debuff defense
-	if debuff_rate >= 200
+    debuff_tag = ""
+    rate = enemy.debuff_rate(param_id) * 100
+	# Branch rating based on enemy's debuff defense rate
+	if rate >= 200
 	  change_color(text_color(10))
-	  debuff_def = rating(0)
-	elsif debuff_rate > 100
+	  debuff_tag = rating(0)
+	elsif rate > 100
 	  change_color(text_color(2))
-	  debuff_def = rating(1)
-	elsif debuff_rate == 100
+	  debuff_tag = rating(1)
+	elsif rate == 100
 	  change_color(normal_color)
-	  debuff_def = rating(2)
-	elsif debuff_rate > 0
+	  debuff_tag = rating(2)
+	elsif rate > 0
     change_color(normal_color, false)
-	  debuff_def = rating(3)
-	elsif debuff_rate == 0
+	  debuff_tag = rating(3)
+	elsif rate == 0
     change_color(normal_color, false)
-	  debuff_def = rating(4)
+	  debuff_tag = rating(4)
 	else
 	  change_color(text_color(3))
-	  debuff_def = rating(5)
+	  debuff_tag = rating(5)
 	end
-	draw_text(x + width - 32, y, width, line_height, debuff_def, 2)
+	  draw_text(x + width - 32, y, width, line_height, debuff_tag, 2)
   end
   #------------------------------------------------------------------------
   # * Draw Enemy Dropped Items
