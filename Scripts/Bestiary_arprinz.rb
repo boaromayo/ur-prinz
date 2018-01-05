@@ -11,7 +11,7 @@
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2018-01-03
+# * Updated: 2018-01-04
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -23,6 +23,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Added third mode and mode number - 2018-01-04
 #    -- Fixed second mode bugs - 2018-01-03
 #    -- Fixed enemy sprite bug and other bugs - 2017-12-21
 #    -- Initial v0.8.1 alpha release - 2017-12-20
@@ -346,6 +347,7 @@ class Window_BestiaryRight < Window_Selectable
     super(window_width, 0, window_width, Graphics.height)
     @enemy = enemy
     @mode = 0
+    @max_mode = 2
     self.visible = false
   end
   #--------------------------------------------------------------------------
@@ -361,6 +363,15 @@ class Window_BestiaryRight < Window_Selectable
     return if @enemy == enemy
     @enemy = enemy
     refresh
+  end
+  #--------------------------------------------------------------------------
+  # * Draw Current Mode
+  #--------------------------------------------------------------------------
+  def draw_mode(width = 128)
+    current_mode = (@mode+1).to_s
+    max_mode = (@max_mode+1).to_s
+    mode_rate = current_mode + "/" + max_mode
+    draw_text(4 + width - 16, Graphics.height - 52, width, line_height, mode_rate, 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy Name
@@ -391,6 +402,7 @@ class Window_BestiaryRight < Window_Selectable
     contents.clear
     create_ratings
     draw_horz_line(line_height)
+    draw_mode
     if @enemy != nil
       draw_enemy_name(@enemy, 4, 0)
       if mode == 0
@@ -399,7 +411,7 @@ class Window_BestiaryRight < Window_Selectable
       elsif mode == 1
         draw_elem_stats(@enemy)
       elsif mode == 2
-        draw_enemy_items(@enemy, 4, 0)
+        draw_enemy_items(@enemy, 4, line_height * 2)
       end
     end
   end
@@ -410,7 +422,7 @@ class Window_BestiaryRight < Window_Selectable
     if @mode > 0
       @mode -= 1
     else
-      @mode = 2
+      @mode = @max_mode
     end
     refresh(@mode)
     activate
@@ -419,7 +431,7 @@ class Window_BestiaryRight < Window_Selectable
   # * Next Mode
   #--------------------------------------------------------------------------
   def next_mode
-    if @mode < 2
+    if @mode < @max_mode
       @mode += 1
     else
       @mode = 0
@@ -448,6 +460,7 @@ class Window_BestiaryRight < Window_Selectable
   #--------------------------------------------------------------------------
   def draw_other_stats(enemy, x, y)
     param_count.each { |i| draw_enemy_param(enemy, x, y + line_height * i, i) }
+    draw_enemy_eva(enemy, x, y + line_height * 8)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy Element Status Rates
@@ -489,48 +502,48 @@ class Window_BestiaryRight < Window_Selectable
   #--------------------------------------------------------------------------
   # * Draw Enemy HP
   #--------------------------------------------------------------------------
-  def draw_enemy_hp(enemy, x, y, width = 128)
+  def draw_enemy_hp(enemy, x, y, width = 124)
     change_color(system_color)
     draw_text(x, y, width, line_height, Vocab::hp)
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, enemy.mhp, 2)
+    draw_text(x + width - 16, y, width, line_height, enemy.mhp, 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy MP
   #--------------------------------------------------------------------------
-  def draw_enemy_mp(enemy, x, y, width = 128)
+  def draw_enemy_mp(enemy, x, y, width = 124)
     change_color(system_color)
     draw_text(x, y, width, line_height, Vocab::mp)
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, enemy.mmp, 2)
+    draw_text(x + width - 16, y, width, line_height, enemy.mmp, 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy TP
   #--------------------------------------------------------------------------
-  def draw_enemy_tp(enemy, x, y, width = 128)
+  def draw_enemy_tp(enemy, x, y, width = 124)
     change_color(system_color)
     draw_text(x, y, width, line_height, Vocab::tp)
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, "0", 2)
+    draw_text(x + width - 16, y, width, line_height, "0", 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy Parameters
   #--------------------------------------------------------------------------
-  def draw_enemy_param(enemy, x, y, param_id, width = 128)
+  def draw_enemy_param(enemy, x, y, param_id, width = 124)
     change_color(system_color)
     draw_text(x, y, width, line_height, Vocab::param(param_id))
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, enemy.param(param_id), 2)
+    draw_text(x + width - 16, y, width, line_height, enemy.param(param_id), 2)
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy Ex-Parameters
   #--------------------------------------------------------------------------
-  def draw_enemy_eva(enemy, x, y, width = 128)
+  def draw_enemy_eva(enemy, x, y, width = 124)
+    eva = (enemy.eva * 100).to_i.to_s
     change_color(system_color)
     draw_text(x, y, width, line_height, "EVA")
     change_color(normal_color)
-    draw_text(x + width - 32, y, width, line_height, enemy.eva, 1)
-    draw_text(x + width - 32 + 4, y, 16, line_height, "%", 1)
+    draw_text(x + width - 16, y, width, line_height, eva + "%", 2)
   end
   #--------------------------------------------------------------------------
   # * Create Enemy Defense Ratings List
@@ -566,7 +579,7 @@ class Window_BestiaryRight < Window_Selectable
   #--------------------------------------------------------------------------
   # * Draw Enemy Element Defense
   #--------------------------------------------------------------------------
-  def draw_enemy_element(enemy, x, y, param_id, width = 128)
+  def draw_enemy_element(enemy, x, y, param_id, width = 124)
     # Initialize tag to label enemy's element defense rating
     element_tag = ""
     rate = enemy.element_rate(param_id) * 100 # Multiply to return percentages
@@ -591,12 +604,12 @@ class Window_BestiaryRight < Window_Selectable
       element_tag = rating(5)
     end
     draw_icon(element_icon(param_id), x, y)
-    draw_text(x + width - 32, y, width, line_height, element_tag, 2)
+    draw_text(x + width - 16, y, width, line_height, element_tag, 2)
   end
   #------------------------------------------------------------------------
   # * Draw Enemy State Defense
   #------------------------------------------------------------------------
-  def draw_enemy_state(enemy, x, y, param_id, width = 128)
+  def draw_enemy_state(enemy, x, y, param_id, width = 124)
     # State defense tag to track enemy's status defense
     state_tag = ""
     rate = enemy.state_rate(param_id) * 100
@@ -620,12 +633,12 @@ class Window_BestiaryRight < Window_Selectable
 	  change_color(text_color(3))
 	  state_tag = rating(5)
 	end
-	  draw_text(x + width - 32, y, width, line_height, state_tag, 2)
+	  draw_text(x + width - 16, y, width, line_height, state_tag, 2)
   end
   #------------------------------------------------------------------------
   # * Draw Enemy Debuff Defense
   #------------------------------------------------------------------------
-  def draw_enemy_debuff(enemy, x, y, param_id, width = 128)
+  def draw_enemy_debuff(enemy, x, y, param_id, width = 124)
     # Debuff defense tag to track enemy's status defense
     debuff_tag = ""
     rate = enemy.debuff_rate(param_id) * 100
@@ -649,20 +662,19 @@ class Window_BestiaryRight < Window_Selectable
 	  change_color(text_color(3))
 	  debuff_tag = rating(5)
 	end
-	  draw_text(x + width - 32, y, width, line_height, debuff_tag, 2)
+	  draw_text(x + width - 16, y, width, line_height, debuff_tag, 2)
   end
   #------------------------------------------------------------------------
   # * Draw Enemy Dropped Items
   #------------------------------------------------------------------------
-  def draw_enemy_items(enemy, x, y, width = 128)
-    items = enemy.drop_items
+  def draw_enemy_items(enemy, x, y, width = 124)
+    #items = enemy.enemy.drop_items
     change_color(system_color)
     draw_text(x, y, width, line_height, "Drops")
-	  draw_horz_line(y + line_height)
     change_color(normal_color)
-    items.each do |item|
-	    draw_item_name(item, x, y + line_height * 2)
-    end
+    #items.each do |item|
+	    #draw_item_name(item, x + width - 32, y + line_height * 2)
+    #end
   end
   #------------------------------------------------------------------------
   # * Draw Element Icons
@@ -671,56 +683,73 @@ class Window_BestiaryRight < Window_Selectable
   def element_icon(index)
     # Set icon values based on icon index 
     # (adjust if icon index for each element is different)
+    fire_icon = 104
+    ice_icon = 105
+    thun_icon = 106
+    water_icon = 107
+    earth_icon = 108
+    wind_icon = 109
+    light_icon = 110
+    dark_icon = 111
     wood_icon = 192
     steel_icon = 146
     heart_icon = 135
     byss_icon = 136
 
     element_set = { 
-      3 => 104, # Fire
-      4 => 105, # Ice
-      5 => 106, # Thunder
-      6 => 107, # Water
-      7 => 108, # Earth
-      8 => 109, # Wind
-      9 => 110, # Light
-      10 => 111, # Darkness
+      3 => fire_icon, # Fire
+      4 => ice_icon, # Ice
+      5 => thun_icon, # Thunder
+      6 => water_icon, # Water
+      7 => earth_icon, # Earth
+      8 => wind_icon, # Wind
+      9 => light_icon, # Light
+      10 => dark_icon, # Darkness
       11 => wood_icon, # Wood
       12 => steel_icon, # Steel
       13 => heart_icon, # Heart
       14 => byss_icon, # Null/Void
     }
 	
-	# Return icon value based on index passed
-	#return index + elem_icon if index > 2 && index < 11
-	#return 0 if index == 2
-	#return wood_icon if index == 11
-	#return steel_icon if index == 12
-	#return heart_icon if index == 13
-	#return byss_icon if index == 14
-	#return physical_icon
-    return element_set[index]
+	  # Return icon value based on index passed
+	  return element_set[index]
   end
   #------------------------------------------------------------------------
   # * Draw Element Icons
   #  Note: This method is for the default iconset.
   #------------------------------------------------------------------------
   #def element_icon(index)
-	  #element_set = {
-      #3 => 96, # Fire
-      #4 => 97, # Ice
-      #5 => 98, # Thunder
-      #6 => 99, # Water
-      #7 => 100, # Earth
-      #8 => 101, # Wind
-      #9 => 102, # Light
-      #10 => 103, # Darkness
-      #11 => 331, # Wood
-      #12 => 350, # Steel
-      #13 => 119, # Heart
-      #14 => 120, # Null/Void
+    # Set icon values based on icon index 
+    # (adjust if icon index for each element is different)
+    #fire_icon = 96
+    #ice_icon = 97
+    #thun_icon = 98
+    #water_icon = 99
+    #earth_icon = 100
+    #wind_icon = 101
+    #light_icon = 102
+    #dark_icon = 103
+    #wood_icon = 331
+    #steel_icon = 350
+    #heart_icon = 119
+    #byss_icon = 120
+	  
+    #element_set = {
+      #3 => fire_icon, # Fire
+      #4 => ice_icon, # Ice
+      #5 => thun_icon, # Thunder
+      #6 => water_icon, # Water
+      #7 => earth_icon, # Earth
+      #8 => wind_icon, # Wind
+      #9 => light_icon, # Light
+      #10 => dark_icon, # Darkness
+      #11 => wood_icon, # Wood
+      #12 => steel_icon, # Steel
+      #13 => heart_icon, # Heart
+      #14 => byss_icon, # Null/Void
     #}
-	# Return icon value based on index passed
+    
+	  # Return icon value based on index passed
     #return element_set[index]
   #end
 end
