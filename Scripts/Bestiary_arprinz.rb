@@ -839,8 +839,7 @@ class Scene_Bestiary < Scene_MenuBase
   # * Object Initialization
   #------------------------------------------------------------------------
   def initialize
-    @index = -1
-    @enemy = enemy(@index)
+    update(-1)
   end
   #------------------------------------------------------------------------
   # * Start Processing
@@ -914,8 +913,7 @@ class Scene_Bestiary < Scene_MenuBase
   # * Confirm Enemy
   #------------------------------------------------------------------------
   def determine_enemy
-    @index = @list_window.index
-    @enemy = enemy(@index)
+    update(@list_window.index)
     if @enemy != nil
       @left_window.enemy = @enemy
       @right_window.enemy = @enemy
@@ -975,11 +973,23 @@ class Scene_Bestiary < Scene_MenuBase
   # * Switch to Previous Enemy
   #------------------------------------------------------------------------
   def prev_enemy
+    i = 0 # Counter
+    # Increase counter if enemy has not been slain
+    if $game_system.enemy_slain[@index-1] <= 0 && @index > 0
+      i -= 1
+    end
+    update(@index+i)
   end
   #------------------------------------------------------------------------
   # * Switch to Next Enemy
   #------------------------------------------------------------------------
   def next_enemy
+    i = 0 # Counter
+    # Decrease counter if enemy has not been slain
+    if $game_system.enemy_slain[@index+1] <= 0 && @index < $game_system.enemy_slain.size - 1
+      i += 1
+    end
+    update(@index+i)
   end
   #------------------------------------------------------------------------
   # * Cursor Up
@@ -992,5 +1002,12 @@ class Scene_Bestiary < Scene_MenuBase
   #------------------------------------------------------------------------
   def cursor_down
     @right_window.next_mode
+  end
+  #------------------------------------------------------------------------
+  # * Update Selected Enemy
+  #------------------------------------------------------------------------
+  def update(index)
+    @index = index
+    @enemy = enemy(index)
   end
 end
