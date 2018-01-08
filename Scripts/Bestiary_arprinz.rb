@@ -11,7 +11,7 @@
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2018-01-04
+# * Updated: 2018-01-08
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -115,6 +115,12 @@ class Game_Enemy < Game_Battler
       # Add enemy to list if encountered
       $game_system.enemy_list[@enemy_id] = self
     end
+  end
+  #------------------------------------------------------------------------
+  # * new method: Get Dropped Items
+  #------------------------------------------------------------------------
+  def drop_items
+    enemy.drop_items
   end
   #------------------------------------------------------------------------
   # * override method: Die
@@ -401,6 +407,7 @@ class Window_BestiaryRight < Window_Selectable
   def refresh(mode = 0)
     contents.clear
     create_ratings
+    add_ratings # Add defense ratings starting from weakest => absorbing
     draw_horz_line(line_height)
     draw_mode
     if @enemy != nil
@@ -466,8 +473,7 @@ class Window_BestiaryRight < Window_Selectable
   # * Draw Enemy Element Status Rates
   #--------------------------------------------------------------------------
   def draw_elem_stats(enemy)
-    # Add the defense ratings starting from weakest => absorbing
-    add_ratings
+    # Get each element's status for enemy
     elements_count.each do |elem|
       draw_enemy_defense(enemy, 4, line_height * (elem - 1), elem)
     end
@@ -668,13 +674,24 @@ class Window_BestiaryRight < Window_Selectable
   # * Draw Enemy Dropped Items
   #------------------------------------------------------------------------
   def draw_enemy_items(enemy, x, y, width = 124)
-    #items = enemy.enemy.drop_items
+    items = enemy.drop_items
     change_color(system_color)
     draw_text(x, y, width, line_height, "Drops")
     change_color(normal_color)
-    #items.each do |item|
-	    #draw_item_name(item, x + width - 32, y + line_height * 2)
-    #end
+    items.each_with_index do |item,i|
+      if item.kind > 0
+        rect = item_rect(i)
+        rect.x += 16
+        rect.y += line_height * (i + 2)
+	      draw_item_name(item, rect.x, rect.y)
+      else
+        # Draw neutral text if no items dropped
+        rect = item_rect_for_text(i)
+        rect.x += 16
+        rect.y += line_height * (i + 2)
+        draw_text(rect, rating(2))
+      end
+    end
   end
   #------------------------------------------------------------------------
   # * Draw Element Icons
