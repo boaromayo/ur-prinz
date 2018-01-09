@@ -117,12 +117,6 @@ class Game_Enemy < Game_Battler
     end
   end
   #------------------------------------------------------------------------
-  # * new method: Get Dropped Items
-  #------------------------------------------------------------------------
-  def drop_items
-    enemy.drop_items
-  end
-  #------------------------------------------------------------------------
   # * override method: Die
   #------------------------------------------------------------------------
   def die
@@ -426,11 +420,7 @@ class Window_BestiaryRight < Window_Selectable
   # * Previous Mode
   #--------------------------------------------------------------------------
   def previous_mode
-    if @mode > 0
-      @mode -= 1
-    else
-      @mode = @max_mode
-    end
+    @mode = @mode > 0 ? @mode - 1 : @max_mode
     refresh(@mode)
     activate
   end
@@ -438,11 +428,7 @@ class Window_BestiaryRight < Window_Selectable
   # * Next Mode
   #--------------------------------------------------------------------------
   def next_mode
-    if @mode < @max_mode
-      @mode += 1
-    else
-      @mode = 0
-    end
+    @mode = @mode < @max_mode ? @mode + 1 : 0
     refresh(@mode)
     activate
   end
@@ -674,7 +660,7 @@ class Window_BestiaryRight < Window_Selectable
   # * Draw Enemy Dropped Items
   #------------------------------------------------------------------------
   def draw_enemy_items(enemy, x, y, width = 124)
-    items = enemy.drop_items
+    items = enemy.make_drop_items
     change_color(system_color)
     draw_text(x, y, width, line_height, "Drops")
     change_color(normal_color)
@@ -682,13 +668,13 @@ class Window_BestiaryRight < Window_Selectable
       if item.kind > 0
         rect = item_rect(i)
         rect.x += 16
-        rect.y += line_height * (i + 2)
+        rect.y = line_height * (i + 3)
 	      draw_item_name(item, rect.x, rect.y)
       else
         # Draw neutral text if no items dropped
         rect = item_rect_for_text(i)
         rect.x += 16
-        rect.y += line_height * (i + 2)
+        rect.y = line_height * (i + 3)
         draw_text(rect, rating(2))
       end
     end
@@ -839,7 +825,7 @@ class Scene_Bestiary < Scene_MenuBase
   # * Object Initialization
   #------------------------------------------------------------------------
   def initialize
-    update(-1)
+    update_enemy(-1)
   end
   #------------------------------------------------------------------------
   # * Start Processing
@@ -913,7 +899,7 @@ class Scene_Bestiary < Scene_MenuBase
   # * Confirm Enemy
   #------------------------------------------------------------------------
   def determine_enemy
-    update(@list_window.index)
+    update_enemy(@list_window.index)
     if @enemy != nil
       @left_window.enemy = @enemy
       @right_window.enemy = @enemy
@@ -978,7 +964,7 @@ class Scene_Bestiary < Scene_MenuBase
     if $game_system.enemy_slain[@index-1] <= 0 && @index > 0
       i -= 1
     end
-    update(@index+i)
+    update_enemy(@index+i)
   end
   #------------------------------------------------------------------------
   # * Switch to Next Enemy
@@ -989,7 +975,7 @@ class Scene_Bestiary < Scene_MenuBase
     if $game_system.enemy_slain[@index+1] <= 0 && @index < $game_system.enemy_slain.size - 1
       i += 1
     end
-    update(@index+i)
+    update_enemy(@index+i)
   end
   #------------------------------------------------------------------------
   # * Cursor Up
@@ -1006,8 +992,8 @@ class Scene_Bestiary < Scene_MenuBase
   #------------------------------------------------------------------------
   # * Update Selected Enemy
   #------------------------------------------------------------------------
-  def update(index)
+  def update_enemy(index)
     @index = index
-    @enemy = enemy(index)
+    @enemy = enemy(@index)
   end
 end
