@@ -11,7 +11,7 @@
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2018-01-08
+# * Updated: 2018-01-10
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -23,6 +23,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Changed die method to an alias - 2018-01-10
 #    -- Added third mode and mode number - 2018-01-04
 #    -- Fixed second mode bugs - 2018-01-03
 #    -- Fixed enemy sprite bug and other bugs - 2017-12-21
@@ -117,10 +118,11 @@ class Game_Enemy < Game_Battler
     end
   end
   #------------------------------------------------------------------------
-  # * override method: Die
+  # * alias method: Die
   #------------------------------------------------------------------------
+  alias bestiary_die die
   def die
-	  super
+	  bestiary_die
     # Enable access to enemy in list if slain
     $game_system.add_enemies_slain(@enemy_id)
   end
