@@ -191,7 +191,7 @@ class Window_BestiaryStatus < Window_Help
     ((enemy_now.to_f / enemy_max) * 100).to_i
   end
   #------------------------------------------------------------------------
-  # * Refresh
+  # * override method: Refresh
   #------------------------------------------------------------------------
   def refresh
     contents.clear
@@ -257,13 +257,6 @@ class Window_BestiaryList < Window_Selectable
     change_color(normal_color, recorded?(index))
     draw_text(item_rect_for_text(index), name, 0)
     draw_text(item_rect_for_text(index), slain, 2)
-  end
-  #------------------------------------------------------------------------
-  # * Refresh
-  #------------------------------------------------------------------------
-  def refresh
-    create_contents
-    draw_all_items
   end
 end
 
