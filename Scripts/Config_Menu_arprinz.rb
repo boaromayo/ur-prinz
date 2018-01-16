@@ -9,7 +9,7 @@
 #
 # * Initial commit: 2018-01-10
 #
-# * Updated: 2018-01-13
+# * Updated: 2018-01-15
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -136,7 +136,6 @@ class Scene_Config < Scene_MenuBase
   def start
     super
     create_config_windows
-    create_description_window
   end
   def create_config_windows
     create_config_window
@@ -144,15 +143,13 @@ class Scene_Config < Scene_MenuBase
   end
   def create_config_window
     @config_window = Window_Config.new
+    @config_window.viewport = @viewport
     set_config_commands
   end
   def create_config_sub_window
     @sub_window = Window_ConfigSub.new(0,0,128)
     @sub_window.set_handler(:ok,      method(:on_sub_ok))
     @sub_window.set_handler(:cancel,  method(:on_sub_cancel))
-  end
-  def create_description_window
-    @help_window = Window_Help.new
   end
   def set_config_commands
     # Set configuration commands here using: @config_window.set_handler(:key, method(:method_here))
