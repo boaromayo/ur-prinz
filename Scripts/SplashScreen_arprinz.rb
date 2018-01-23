@@ -2,13 +2,13 @@
 # *** Splash Screen
 #--------------------------------------------------------------------------
 #  This plugin provides the splash screen before the title. Can use a custom
-# image in place of the default.
+# image in place of the default. This plugin ONLY works for RPG MAKER VX Ace.
 #
 # * Version: 1.0.1
 #
 # * Initial release: 2017-11-06
 #
-# * Updated: 2017-01-21
+# * Updated: 2017-01-22
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -20,15 +20,16 @@
 # somewhere in your projects.
 #
 # * Changelog:
-#    -- Final touches  - 2018-01-21
+#    -- Final touches  - 2018-01-22
 #    -- Initial commit - 2017-11-07
 #    -- Initialization - 2017-11-06
 #==========================================================================
 #==========================================================================
 # ** SceneManager
 #--------------------------------------------------------------------------
+#  The module that the Scene classes will inherit from.
 #==========================================================================
-class SceneManager
+module SceneManager
   #--------------------------------------------------------------------------
   # * override method: Get First Scene Class
   #--------------------------------------------------------------------------
@@ -36,6 +37,7 @@ class SceneManager
     $BTEST ? Scene_Battle : Scene_Splash
   end
 end
+
 #==========================================================================
 # ** new class: Scene_Splash
 #--------------------------------------------------------------------------
@@ -46,8 +48,6 @@ class Scene_Splash < Scene_Base
   # * Object Initialization
   #------------------------------------------------------------------------
   def initialize
-    @wait_time = 300
-	  @delay = @wait_time
     @sprite = nil
     @fadeout = false
     @fadein = false
@@ -58,6 +58,7 @@ class Scene_Splash < Scene_Base
   def start
     super
     SceneManager.clear
+    Graphics.freeze
     create_splashscreen
   end
   #------------------------------------------------------------------------
@@ -66,6 +67,12 @@ class Scene_Splash < Scene_Base
   def terminate
     super
     dispose_splashscreen
+  end
+  #------------------------------------------------------------------------
+  # * Get Transition Speed
+  #------------------------------------------------------------------------
+  def transition_speed
+    return 60
   end
   #------------------------------------------------------------------------
   # * Create Splash Image
@@ -91,30 +98,7 @@ class Scene_Splash < Scene_Base
     sprite.ox = sprite.bitmap.width / 2
     sprite.oy = sprite.bitmap.height / 2
   end
-  #------------------------------------------------------------------------
-  # * Fade Loop
-  #    duration: Duration of process for fade effects.
-  #------------------------------------------------------------------------
-  def fade_loop(duration)
-    duration.times do |i|
-      yield 255 * (i + 1) / duration
-      update
-    end
-  end
-  #------------------------------------------------------------------------
-  # * Fade-In Processing
-  #    transition time: Duration of process to fade-in.
-  #------------------------------------------------------------------------
-  def fadein(time = @wait_time)
-    fade_loop(time) { |v| Graphics.brightness = v }
-  end
-  #------------------------------------------------------------------------
-  # * Fade-Out Processing
-  #    transition time: Duration of process to fade-out.
-  #------------------------------------------------------------------------
-  def fadeout(time = @wait_time)
-    fade_loop(time) { |v| Graphics.brightness = 255 - v }
-  end
+  
   #------------------------------------------------------------------------
   # * Splash Screen Filename
   #------------------------------------------------------------------------
@@ -123,24 +107,48 @@ class Scene_Splash < Scene_Base
     return "boaromayo-splash.png"
   end
   #------------------------------------------------------------------------
+  # * Get Wait Time
+  #------------------------------------------------------------------------
+  def wait_time
+    # Adjust how long splash stays on-screen
+    return 90
+  end
+  #------------------------------------------------------------------------
   # * Frame Update
   #------------------------------------------------------------------------
   def update
     super
-    if !@fadein
-      fadein
-      @sprite.opacity = 255
-      @fadein = true
-    else
-      if @delay > 0
-	      @delay -= 1
-      else
-        fadeout
-        @sprite.opacity = 0
-        @fadeout = true
-        @fadein = false
-      end
-	  end
-    SceneManager.call(Scene_Title)
+    goto_title if Input.trigger?(:C)
+    Graphics.wait(wait_time)
+    goto_title
+  end
+  #------------------------------------------------------------------------
+  # * Transition To Title Screen
+  #------------------------------------------------------------------------
+  def goto_title
+    fadeout_all
+    SceneManager.goto(Scene_Title)
+  end
+end
+
+#==============================================================================
+# ** Scene_Gameover
+#------------------------------------------------------------------------------
+#  This class performs game over screen processing.
+#==============================================================================
+class Scene_Gameover < Scene_Base
+  #----------------------------------------------------------------------------
+  # * override method: Frame Update
+  #----------------------------------------------------------------------------
+  def update
+    super
+    goto_splash
+  end
+  #----------------------------------------------------------------------------
+  # * new method: Transition to Splash Screen
+  #----------------------------------------------------------------------------
+  def goto_splash
+    fadeout_all
+    SceneManager.goto(Scene_Splash)
   end
 end
