@@ -20,6 +20,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Delay added to goto_title - 2018-01-22
 #    -- Final touches  - 2018-01-22
 #    -- Initial commit - 2017-11-07
 #    -- Initialization - 2017-11-06
@@ -124,9 +125,11 @@ class Scene_Splash < Scene_Base
   end
   #------------------------------------------------------------------------
   # * Transition To Title Screen
+  #    delay: Delay time in between scene transitions
   #------------------------------------------------------------------------
-  def goto_title
+  def goto_title(delay = 30)
     fadeout_all
+    Graphics.wait(delay)
     SceneManager.goto(Scene_Title)
   end
 end
