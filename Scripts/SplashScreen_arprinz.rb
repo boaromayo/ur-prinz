@@ -20,7 +20,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
-#    -- Delay added to goto_title - 2018-01-22
+#    -- Delay added in-between scene transitions - 2018-01-22
 #    -- Final touches  - 2018-01-22
 #    -- Initial commit - 2017-11-07
 #    -- Initialization - 2017-11-06
