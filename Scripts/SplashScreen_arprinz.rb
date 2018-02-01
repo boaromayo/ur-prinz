@@ -8,11 +8,13 @@
 #
 # * Initial release: 2017-11-06
 #
-# * Updated: 2017-01-22
+# * Initial commit: 2017-11-07
+#
+# * Updated: 2018-01-31
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
-# Optional resources:
+# Required resources:
 #   Custom splash screen
 #
 # NOTE: If you are using this plugin for your projects (commercial or non-commercial), 
@@ -20,10 +22,11 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Updated other information - 2018-01-31
 #    -- Delay added in-between scene transitions - 2018-01-22
 #    -- Final touches  - 2018-01-22
 #    -- Initial commit - 2017-11-07
-#    -- Initialization - 2017-11-06
+#    -- Started script - 2017-11-06
 #==========================================================================
 #==========================================================================
 # ** SceneManager
