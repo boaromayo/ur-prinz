@@ -8,9 +8,9 @@
 #
 # * Initial release: 2017-10-29
 #
-# * Initial commit: 2017-11-
+# * Initial commit: 2017-11-27
 #
-# * Updated: 2017-11-28
+# * Updated: 2018-01-31
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -19,8 +19,9 @@
 # in your projects.
 #
 # * Changelog:
+#    -- Updated terms of use information - 2018-01-31
 #    -- Finished sprite background - 2017-11-28
-#    -- Initial commit - 2017-11-27
+#    -- Started script; Initial commit - 2017-11-27
 #=======================================================================================
 #===================================================================
 # ** New class: Game_Credits
@@ -114,11 +115,11 @@ class Window_Credits < Window_Selectable
   # * Add To Data List
   #-----------------------------------------------------------------
   def make_credits_list
-  	$game_credits.credit_tilesets.each_index |credit,i| { @data.push($game_credits.credit_tilesets(credit,i)) }
-  	$game_credits.credit_art.each_index |credit,i| { @data.push($game_credits.credit_art(credit,i)) }
-  	$game_credits.credit_programs.each_index |credit,i| { @data.push($game_credits.credit_programs(credit,i)) }
-  	$game_credits.credit_music.each_index |credit,i| { @data.push($game_credits.credit_music(credit,i)) }
-    $game_credits.credit_dedication.each_index |credit,i| { @data.push($game_credits.credit_dedication(credit,i)) }
+  	$game_credits.credit_tilesets.each_with_index |credit,i| { @data.push($game_credits.credit_tilesets(credit,i)) }
+  	$game_credits.credit_art.each_with_index |credit,i| { @data.push($game_credits.credit_art(credit,i)) }
+  	$game_credits.credit_programs.each_with_index |credit,i| { @data.push($game_credits.credit_programs(credit,i)) }
+  	$game_credits.credit_music.each_with_index |credit,i| { @data.push($game_credits.credit_music(credit,i)) }
+    $game_credits.credit_dedication.each_with_index |credit,i| { @data.push($game_credits.credit_dedication(credit,i)) }
   end
   #-----------------------------------------------------------------
   # * Draw Item
