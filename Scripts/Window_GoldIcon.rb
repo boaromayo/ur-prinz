@@ -8,7 +8,7 @@
 # 
 # * Initial release: 2017-10-25
 #
-# * Initial commit: 2017-10-25
+# * Initial commit: 2018-01-31
 #
 # * Updated: 2018-01-31
 #
@@ -23,6 +23,7 @@
 #
 # * Changelog:
 #     -- Added terms of use and other information. - 2018-01-31
+#     -- Initial release - 2017-10-25
 #     -- Initial commit; finished script - 2017-10-24
 #==============================================================================
 #==============================================================================

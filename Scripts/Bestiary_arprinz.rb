@@ -7,11 +7,11 @@
 #
 # * Version: 0.8.1
 #
-# * Initial release: 2016-04-25
+# * Initial release: 2017-10-16
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2018-01-13
+# * Updated: 2018-01-31
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -23,6 +23,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Updated other information - 2018-01-31
 #    -- Changed die method to an alias - 2018-01-10
 #    -- Added third mode and mode number - 2018-01-04
 #    -- Fixed second mode bugs - 2018-01-03
@@ -46,6 +47,7 @@
 #    -- Added more features and fixed bugs - 2017-10-25
 #    -- Added more features - 2017-10-18
 #    -- Initial commit - 2017-10-16
+#    -- Started script - 2017-10-09
 #==========================================================================
 
 $imported ||= {}
@@ -652,10 +654,21 @@ class Window_BestiaryRight < Window_Selectable
 	  draw_text(x + width - 16, y, width, line_height, debuff_tag, 2)
   end
   #------------------------------------------------------------------------
+  # * Draw Enemy Dropped Item
+  #------------------------------------------------------------------------
+  def draw_enemy_drop_item(drop_item, rect)
+    case drop_item.kind
+    when 1; item = $data_items[drop_item.data_id]
+    when 2; item = $data_weapons[drop_item.data_id] 
+    when 3; item = $data_armors[drop_item.data_id]
+    end
+    draw_item_name(item, rect.x, rect.y)
+  end
+  #------------------------------------------------------------------------
   # * Draw Enemy Dropped Items
   #------------------------------------------------------------------------
   def draw_enemy_items(enemy, x, y, width = 124)
-    items = enemy.make_drop_items
+    items = enemy.drop_items
     change_color(system_color)
     draw_text(x, y, width, line_height, "Drops")
     change_color(normal_color)
@@ -664,7 +677,7 @@ class Window_BestiaryRight < Window_Selectable
         rect = item_rect(i)
         rect.x += 16
         rect.y = line_height * (i + 3)
-	      draw_item_name(item, rect.x, rect.y)
+	      draw_enemy_drop_item(item, rect)
       else
         # Draw neutral text if no items dropped
         rect = item_rect_for_text(i)
