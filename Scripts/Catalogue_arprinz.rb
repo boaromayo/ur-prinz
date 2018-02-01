@@ -6,11 +6,11 @@
 #
 # * Version 0.5.0
 #
-# * Initial release: 2017-11-23
+# * Initial release: 2017-11-24
 #
 # * Initial commit: 2017-11-24
 #
-# * Updated: 2017-11-25
+# * Updated: 2018-01-31
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -19,7 +19,10 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#   -- Updated other information - 2018-01-31
+#   -- Small update - 2017-11-25
 # 	-- Initial commit and release - 2017-11-24
+#   -- Started script - 2017-11-23
 #==========================================================================
 
 $imported ||= {}
