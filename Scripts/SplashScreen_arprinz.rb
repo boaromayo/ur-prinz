@@ -22,6 +22,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Changed transition speed and enabled input to fadeout - 2018-05-31
 #    -- Updated other information - 2018-01-31
 #    -- Delay added in-between scene transitions - 2018-01-22
 #    -- Final touches  - 2018-01-22
@@ -53,8 +54,7 @@ class Scene_Splash < Scene_Base
   #------------------------------------------------------------------------
   def initialize
     @sprite = nil
-    @fadeout = false
-    @fadein = false
+    @time = wait_time
   end
   #------------------------------------------------------------------------
   # * Start Processing
@@ -76,12 +76,12 @@ class Scene_Splash < Scene_Base
   # * Get Transition Speed
   #------------------------------------------------------------------------
   def transition_speed
-    return 60
+    return 20
   end
   #------------------------------------------------------------------------
   # * Create Splash Image
   #------------------------------------------------------------------------
-  def create_splashscreen  
+  def create_splashscreen
     @sprite = Sprite.new
     @sprite.bitmap = Cache.system(splashscreen_name)
     center_splashscreen(@sprite)
@@ -102,7 +102,6 @@ class Scene_Splash < Scene_Base
     sprite.ox = sprite.bitmap.width / 2
     sprite.oy = sprite.bitmap.height / 2
   end
-  
   #------------------------------------------------------------------------
   # * Splash Screen Filename
   #------------------------------------------------------------------------
@@ -115,7 +114,7 @@ class Scene_Splash < Scene_Base
   #------------------------------------------------------------------------
   def wait_time
     # Adjust how long splash stays on-screen
-    return 90
+    return 180
   end
   #------------------------------------------------------------------------
   # * Frame Update
@@ -123,8 +122,11 @@ class Scene_Splash < Scene_Base
   def update
     super
     goto_title if Input.trigger?(:C)
-    Graphics.wait(wait_time)
-    goto_title
+    if @time > 0
+      @time -= 1
+    else
+      goto_title
+    end
   end
   #------------------------------------------------------------------------
   # * Transition To Title Screen
