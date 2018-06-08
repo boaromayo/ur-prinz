@@ -11,7 +11,7 @@
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2018-01-31
+# * Updated: 2018-06-07
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -23,6 +23,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Small fixes - 2018-06-07
 #    -- Updated other information - 2018-01-31
 #    -- Changed die method to an alias - 2018-01-10
 #    -- Added third mode and mode number - 2018-01-04
@@ -458,7 +459,7 @@ class Window_BestiaryRight < Window_Selectable
   def draw_elem_stats(enemy)
     # Get each element's status for enemy
     elements_count.each do |elem|
-      draw_enemy_defense(enemy, 4, line_height * (elem - 1), elem)
+      draw_enemy_element(enemy, 4, line_height * (elem - 1), elem)
     end
     change_color(normal_color)
   end
@@ -573,25 +574,7 @@ class Window_BestiaryRight < Window_Selectable
     element_tag = ""
     rate = enemy.element_rate(param_id) * 100 # Multiply to return percentages
     # Branch rating based on enemy's element defense rate
-    if rate >= 200
-      change_color(text_color(10))
-      element_tag = rating(0)
-    elsif rate > 100
-      change_color(text_color(2))
-      element_tag = rating(1)
-    elsif rate == 100
-      change_color(normal_color)
-      element_tag = rating(2)
-    elsif rate > 0
-      change_color(normal_color, false)
-      element_tag = rating(3)
-    elsif rate == 0
-      change color(normal_color, false)
-      element_tag = rating(4)
-    else
-      change_color(text_color(3))
-      element_tag = rating(5)
-    end
+    element_tag = enemy_defense(rate)
     draw_icon(element_icon(param_id), x, y)
     draw_text(x + width - 16, y, width, line_height, element_tag, 2)
   end
@@ -602,26 +585,8 @@ class Window_BestiaryRight < Window_Selectable
     # State defense tag to track enemy's status defense
     state_tag = ""
     rate = enemy.state_rate(param_id) * 100
-	# Branch rating based on enemy's state defense rate
-	if rate >= 200
-	  change_color(text_color(10))
-	  state_tag = rating(0)
-	elsif rate > 100
-	  change_color(text_color(2))
-	  state_tag = rating(1)
-	elsif rate == 100
-	  change_color(normal_color)
-	  state_tag = rating(2)
-	elsif rate > 0
-    change_color(normal_color, false)
-	  state_tag = rating(3)
-	elsif rate == 0
-    change_color(normal_color, false)
-	  state_tag = rating(4)
-	else
-	  change_color(text_color(3))
-	  state_tag = rating(5)
-	end
+	  # Branch rating based on enemy's state defense rate
+	  state_tag = enemy_defense(rate)
 	  draw_text(x + width - 16, y, width, line_height, state_tag, 2)
   end
   #------------------------------------------------------------------------
@@ -631,27 +596,34 @@ class Window_BestiaryRight < Window_Selectable
     # Debuff defense tag to track enemy's status defense
     debuff_tag = ""
     rate = enemy.debuff_rate(param_id) * 100
-	# Branch rating based on enemy's debuff defense rate
-	if rate >= 200
-	  change_color(text_color(10))
-	  debuff_tag = rating(0)
-	elsif rate > 100
-	  change_color(text_color(2))
-	  debuff_tag = rating(1)
-	elsif rate == 100
-	  change_color(normal_color)
-	  debuff_tag = rating(2)
-	elsif rate > 0
-    change_color(normal_color, false)
-	  debuff_tag = rating(3)
-	elsif rate == 0
-    change_color(normal_color, false)
-	  debuff_tag = rating(4)
-	else
-	  change_color(text_color(3))
-	  debuff_tag = rating(5)
-	end
+	  # Branch rating based on enemy's debuff defense rate
+    debuff_tag = enemy_defense(rate)
 	  draw_text(x + width - 16, y, width, line_height, debuff_tag, 2)
+  end
+  #------------------------------------------------------------------------
+  # * Get Enemy Defense Rating (for States, Elements, etc.)
+  #------------------------------------------------------------------------
+  def enemy_defense(rate)
+    # Branch rating based on enemy's defense rate
+    if rate >= 200
+      change_color(text_color(10))
+      rating(0)
+    elsif rate > 100
+      change_color(text_color(2))
+      rating(1)
+    elsif rate == 100
+      change_color(normal_color)
+      rating(2)
+    elsif rate > 0
+      change_color(normal_color, false)
+      rating(3)
+    elsif rate == 0
+      change_color(normal_color, false)
+      rating(4)
+    else
+      change_color(text_color(3))
+      rating(5)
+    end
   end
   #------------------------------------------------------------------------
   # * Draw Enemy Dropped Item
