@@ -10,7 +10,7 @@
 #
 # * Initial commit: 2017-11-07
 #
-# * Updated: 2018-01-31
+# * Updated: 2018-06-12
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -22,6 +22,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Minor fixes - 2018-06-12
 #    -- Changed transition speed and enabled input to fadeout - 2018-05-31
 #    -- Updated other information - 2018-01-31
 #    -- Delay added in-between scene transitions - 2018-01-22
@@ -150,7 +151,7 @@ class Scene_Gameover < Scene_Base
   #----------------------------------------------------------------------------
   def update
     super
-    goto_splash
+    goto_splash if Input.trigger?(:C)
   end
   #----------------------------------------------------------------------------
   # * new method: Transition to Splash Screen
