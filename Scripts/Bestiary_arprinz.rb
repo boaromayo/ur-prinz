@@ -5,13 +5,13 @@
 # shows the quantity of enemies slain, along with other stats, from health
 # to treasures to weaknesses and strengths.
 #
-# * Version: 0.8.1
+# * Version: 0.9.0
 #
 # * Initial release: 2017-10-16
 #
 # * Initial commit: 2017-10-16
 #
-# * Updated: 2018-06-07
+# * Updated: 2018-06-20
 #
 # * Coded by: boaromayo/Quesada's Swan
 #
@@ -23,6 +23,7 @@
 # somewhere in your projects.
 #
 # * Changelog:
+#    -- Adjusted ratings tables - 2018-06-20
 #    -- Small fixes - 2018-06-07
 #    -- Updated other information - 2018-01-31
 #    -- Changed die method to an alias - 2018-01-10
@@ -544,10 +545,10 @@ class Window_BestiaryRight < Window_Selectable
   #--------------------------------------------------------------------------
   # * Add Enemy Defense Rating
   #     name   : rating name
-  #     symbol : corresponding symbol
+  #     color  : rating text color
   #--------------------------------------------------------------------------
-  def add_rating(name, symbol)
-    @rate_list.push({:name=>name, :symbol=>symbol})
+  def add_rating(name, color)
+    @rate_list.push({:name=>name, :color=>color})
   end
   #--------------------------------------------------------------------------
   # * Get Enemy Defense Rating
@@ -556,15 +557,21 @@ class Window_BestiaryRight < Window_Selectable
     @rate_list[index][:name]
   end
   #--------------------------------------------------------------------------
+  # * Get Enemy Defense Rating Color
+  #--------------------------------------------------------------------------
+  def rating_color(index)
+    @rate_list[index][:color]
+  end
+  #--------------------------------------------------------------------------
   # * Add Enemy Rating Names
   #--------------------------------------------------------------------------
   def add_ratings
-    add_rating("Very Weak", :very_weak)
-    add_rating("Weak",      :weak)
-    add_rating("---------", :neutral)
-    add_rating("Strong",    :strong)
-    add_rating("Immune",    :immune)
-    add_rating("Absorb",    :absorb)
+    add_rating("Very Weak", text_color(10))
+    add_rating("Weak",      text_color(2))
+    add_rating("---------", normal_color)
+    add_rating("Strong",    text_color(8))
+    add_rating("Immune",    text_color(7))
+    add_rating("Absorb",    text_color(3))
   end
   #--------------------------------------------------------------------------
   # * Draw Enemy Element Defense
@@ -605,24 +612,30 @@ class Window_BestiaryRight < Window_Selectable
   #------------------------------------------------------------------------
   def enemy_defense(rate)
     # Branch rating based on enemy's defense rate
+    very_weak = 0
+    weak = 1
+    neutral = 2
+    strong = 3
+    immune = 4
+    absorb = 5
     if rate >= 200
-      change_color(text_color(10))
-      rating(0)
+      change_color(rating_color(very_weak))
+      rating(very_weak)
     elsif rate > 100
-      change_color(text_color(2))
-      rating(1)
+      change_color(rating_color(weak))
+      rating(weak)
     elsif rate == 100
-      change_color(normal_color)
-      rating(2)
+      change_color(rating_color(neutral))
+      rating(neutral)
     elsif rate > 0
-      change_color(normal_color, false)
-      rating(3)
+      change_color(rating_color(strong))
+      rating(strong)
     elsif rate == 0
-      change_color(normal_color, false)
-      rating(4)
+      change_color(rating_color(immune))
+      rating(immune)
     else
-      change_color(text_color(3))
-      rating(5)
+      change_color(rating_color(absorb))
+      rating(absorb)
     end
   end
   #------------------------------------------------------------------------
